@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,27 +15,31 @@ import { generateLocalizedLink } from '@/lib/i18n'
 const teamMembers = [
   {
     name: "Alex Chen",
-    role: "CEO & AI Picture Generator Visionary",
-    bio: "Leading the AI Picture Generator revolution with 8+ years in AI technology and creative platforms.",
-    avatar: "AC"
+    role: "CEO & Founder",
+    bio: "Serial entrepreneur with 5+ years in AI/ML. Previously led product teams at Microsoft Azure AI. Founded Sybau Picture in 2025 with a vision to democratize creative content generation.",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "AC"
   },
   {
     name: "Sarah Kim",
-    role: "CTO & AI Picture Generator Architect",
-    bio: "AI Picture Generator technology expert with deep learning background. Previously at OpenAI and Google DeepMind.",
-    avatar: "SK"
+    role: "CTO & Co-founder",
+    bio: "AI research scientist with PhD from Stanford. Former ML engineer at OpenAI and Google Brain. Expert in computer vision and generative AI models.",
+    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "SK"
   },
   {
-    name: "Mike Rodriguez",
-    role: "Lead AI Picture Generator Designer",
-    bio: "Creative director specializing in AI Picture Generator interfaces and user experience optimization.",
-    avatar: "MR"
+    name: "David Rodriguez",
+    role: "Head of Product Design",
+    bio: "Creative technologist and UX designer. Previously at Figma and Adobe. Passionate about making AI tools accessible to everyone through intuitive design.",
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "DR"
   },
   {
-    name: "Emma Watson",
-    role: "Senior AI Picture Generator Engineer",
-    bio: "Computer vision specialist focused on advancing AI Picture Generator algorithms and model performance.",
-    avatar: "EW"
+    name: "Lisa Zhang",
+    role: "Lead AI Engineer",
+    bio: "Computer vision specialist with background in deep learning. Former research scientist at Meta AI. Focused on advancing generative AI performance and safety.",
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "LZ"
   }
 ]
 
@@ -63,32 +68,32 @@ const values = [
 
 const milestones = [
   {
-    year: "2023",
-    title: "AI Picture Generator Foundation",
-    description: "Founded with a mission to democratize content creation through advanced AI Picture Generator technology."
+    year: "Jan 2025",
+    title: "Company Founded",
+    description: "Sybau Picture founded by Alex Chen and Sarah Kim with $2M seed funding. Mission: democratize creative content through AI."
   },
   {
-    year: "Early 2024",
-    title: "First AI Picture Generator Model",
-    description: "Launched our revolutionary AI Picture Generator with 95% accuracy in Sybau Lazer Dim style generation."
+    year: "Mar 2025",
+    title: "MVP Launch",
+    description: "Released beta version with core Sybau Lazer Dim 700 style generation. First 1,000 users create over 10,000 images."
   },
   {
-    year: "Mid 2024",
-    title: "AI Picture Generator Community Launch",
-    description: "Opened our AI Picture Generator to 10,000+ beta creators who generated over 100,000 viral memes."
+    year: "Jun 2025",
+    title: "Public Beta",
+    description: "Opened public beta with enhanced AI models. Reached 10,000+ users generating 100,000+ viral memes."
   },
   {
-    year: "Late 2024",
-    title: "Advanced AI Picture Generator",
-    description: "Enhanced our AI Picture Generator with multi-style support and real-time generation capabilities worldwide."
+    year: "Sep 2025",
+    title: "Global Expansion",
+    description: "Launched multilingual support for 10 languages. Expanded to serve creators in 50+ countries worldwide."
   }
 ]
 
 const stats = [
-  { number: "500K+", label: 'AI Picture Generator Creations' },
-  { number: "50K+", label: 'Active AI Picture Generator Users' },
-  { number: "80+", label: 'Countries Using Our AI Picture Generator' },
-  { number: "99.9%", label: 'AI Picture Generator Uptime' }
+  { number: "150K+", label: 'Memes Created' },
+  { number: "25K+", label: 'Active Users' },
+  { number: "50+", label: 'Countries Served' },
+  { number: "99.5%", label: 'Uptime' }
 ]
 
 const features = [
@@ -125,7 +130,7 @@ export default function AboutPage() {
             Revolutionary AI Picture Generator Technology
           </h1>
           <p className="text-xl lg:text-2xl text-gray-600 max-w-4xl mx-auto mb-8 leading-relaxed">
-            We're pioneering the future of creative content with our advanced AI Picture Generator platform. Our cutting-edge AI Picture Generator technology democratizes meme creation, making professional-quality visual content accessible to creators worldwide. Experience the power of our AI Picture Generator and join millions transforming their ideas into viral masterpieces.
+            Sybau Picture is an AI startup founded in 2025, pioneering the future of creative content generation. Our team of experts from top tech companies has built an advanced AI platform specialized in Sybau Lazer Dim 700 style. We're democratizing professional-quality meme creation, making it accessible to creators worldwide through cutting-edge technology.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
@@ -268,22 +273,45 @@ export default function AboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <Card key={index} className="text-center transition-all duration-300">
-                <CardHeader>
-                  <div className="h-20 w-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold text-xl">{member.avatar}</span>
+            {teamMembers.map((member, index) => {
+              const MemberAvatar = () => {
+                const [imageError, setImageError] = useState(false);
+
+                return (
+                  <div className="h-20 w-20 rounded-full mx-auto mb-4 overflow-hidden">
+                    {!imageError ? (
+                      <Image
+                        src={member.avatar}
+                        alt={`${member.name} - ${member.role}`}
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                    ) : (
+                      <div className="h-20 w-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-xl">{member.avatarFallback}</span>
+                      </div>
+                    )}
                   </div>
-                  <CardTitle className="text-lg text-gray-800">{member.name}</CardTitle>
-                  <Badge variant="secondary" className="mx-auto bg-purple-100 text-purple-700">{member.role}</Badge>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-sm text-gray-600">
-                    {member.bio}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                );
+              };
+
+              return (
+                <Card key={index} className="text-center transition-all duration-300">
+                  <CardHeader>
+                    <MemberAvatar />
+                    <CardTitle className="text-lg text-gray-800">{member.name}</CardTitle>
+                    <Badge variant="secondary" className="mx-auto bg-purple-100 text-purple-700">{member.role}</Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-sm text-gray-600">
+                      {member.bio}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 

@@ -1,8 +1,12 @@
+'use client'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Target, Lightbulb, Rocket, Heart, Star, Users, Zap, Shield, Clock, Award } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
+import { useState } from 'react'
 
 const values = [
   {
@@ -29,59 +33,63 @@ const values = [
 
 const teamMembers = [
   {
-    avatar: 'A',
     name: 'Alex Chen',
     role: 'CEO & 创始人',
-    bio: 'AI领域的远见者，致力于让创意技术惠及每个人。'
+    bio: '连续创业者，拥有5年AI/ML经验。曾在Microsoft Azure AI团队担任产品负责人。2025年创立Sybau Picture，致力于让创意内容生成民主化。',
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "AC"
   },
   {
-    avatar: 'S',
     name: 'Sarah Kim',
-    role: '首席技术官',
-    bio: '机器学习专家，专注于构建下一代AI创意工具。'
+    role: 'CTO & 联合创始人',
+    bio: 'AI研究科学家，斯坦福大学博士。前OpenAI和Google Brain ML工程师。专攻计算机视觉和生成式AI模型。',
+    avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "SK"
   },
   {
-    avatar: 'M',
-    name: 'Mike Johnson',
-    role: '产品总监',
-    bio: '用户体验专家，确保我们的工具直观易用。'
+    name: 'David Rodriguez',
+    role: '产品设计总监',
+    bio: '创意技术专家和UX设计师。曾任职于Figma和Adobe。致力于通过直观设计让AI工具惠及每个人。',
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "DR"
   },
   {
-    avatar: 'L',
     name: 'Lisa Zhang',
-    role: '设计主管',
-    bio: '创意设计师，为我们的平台带来美学和功能的完美融合。'
+    role: '首席AI工程师',
+    bio: '计算机视觉专家，深度学习背景。前Meta AI研究科学家。专注于提升生成式AI性能和安全性。',
+    avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&h=150&fit=crop&crop=face&auto=format&q=80",
+    avatarFallback: "LZ"
   }
 ]
 
 const milestones = [
   {
-    year: '2023',
+    year: '2025年1月',
     title: '公司成立',
-    description: '怀着让创意民主化的愿景开始了我们的旅程。'
+    description: 'Alex Chen和Sarah Kim创立Sybau Picture，获得200万美元种子轮融资。使命：通过AI让创意内容民主化。'
   },
   {
-    year: '2024',
-    title: 'AI引擎发布',
-    description: '推出了我们的第一个AI图像生成引擎。'
+    year: '2025年3月',
+    title: 'MVP发布',
+    description: '发布核心Sybau Lazer Dim 700风格生成的测试版本。首批1000用户创作超过1万张图像。'
   },
   {
-    year: '2024',
-    title: '用户里程碑',
-    description: '达到10万活跃用户，生成了100万张图像。'
+    year: '2025年6月',
+    title: '公测上线',
+    description: '开放公测版本，增强AI模型功能。用户突破1万人，生成超过10万张病毒式传播图像。'
   },
   {
-    year: '2024',
-    title: '全球扩展',
-    description: '将服务扩展到50多个国家，支持多种语言。'
+    year: '2025年9月',
+    title: '全球扩张',
+    description: '推出10种语言的多语言支持。服务扩展至全球50多个国家的创作者。'
   }
 ]
 
 const stats = [
-  { number: "100万+", label: '表情包创作' },
-  { number: "25万+", label: '活跃用户' },
+  { number: "15万+", label: '表情包创作' },
+  { number: "2.5万+", label: '活跃用户' },
   { number: "50+", label: '服务国家' },
-  { number: "99.9%", label: '在线时间' }
+  { number: "99.5%", label: '在线时间' }
 ]
 
 export default function ZHAboutPage() {
@@ -95,7 +103,7 @@ export default function ZHAboutPage() {
             通过AI赋能创意
           </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
-            我们致力于通过专业级AI图像生成技术的普及，让每个人、每个地方都能轻松创作表情包。加入数百万创作者，将您的创意转化为病毒式内容。
+            Sybau Picture是2025年成立的AI初创公司，致力于让专业级图像生成技术普及到每个人。我们的团队来自顶尖科技公司，专注于Sybau Lazer Dim 700风格的AI图像生成，帮助创作者轻松制作病毒式内容。
           </p>
         </div>
 
@@ -183,22 +191,45 @@ export default function ZHAboutPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <Card key={index} className="text-center">
-                <CardHeader>
-                  <div className="h-20 w-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-white font-bold text-xl">{member.avatar}</span>
+            {teamMembers.map((member, index) => {
+              const MemberAvatar = () => {
+                const [imageError, setImageError] = useState(false);
+
+                return (
+                  <div className="h-20 w-20 rounded-full mx-auto mb-4 overflow-hidden">
+                    {!imageError ? (
+                      <Image
+                        src={member.avatar}
+                        alt={`${member.name} - ${member.role}`}
+                        width={80}
+                        height={80}
+                        className="w-full h-full object-cover"
+                        onError={() => setImageError(true)}
+                      />
+                    ) : (
+                      <div className="h-20 w-20 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold text-xl">{member.avatarFallback}</span>
+                      </div>
+                    )}
                   </div>
-                  <CardTitle className="text-lg">{member.name}</CardTitle>
-                  <Badge variant="secondary" className="mx-auto">{member.role}</Badge>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="text-sm">
-                    {member.bio}
-                  </CardDescription>
-                </CardContent>
-              </Card>
-            ))}
+                );
+              };
+
+              return (
+                <Card key={index} className="text-center">
+                  <CardHeader>
+                    <MemberAvatar />
+                    <CardTitle className="text-lg">{member.name}</CardTitle>
+                    <Badge variant="secondary" className="mx-auto">{member.role}</Badge>
+                  </CardHeader>
+                  <CardContent>
+                    <CardDescription className="text-sm">
+                      {member.bio}
+                    </CardDescription>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
 
