@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    
+
     // 验证输入数据
     const validatedData = signUpSchema.parse(body)
     const { name, email, password } = validatedData
@@ -39,19 +39,26 @@ export async function POST(request: NextRequest) {
     // 加密密码
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // 创建用户
+    // 获取免费套餐
+    const freePlan = await prisma.plan.findUnique({
+      where: { name: 'free' }
+    })
+
+    // 创建用户并分配免费套餐
     const user = await prisma.user.create({
       data: {
         name,
         email,
         password: hashedPassword,
         image: null, // 可以后续添加默认头像
+        planId: freePlan?.id || null
       },
       select: {
         id: true,
         name: true,
         email: true,
         image: true,
+        planId: true,
         createdAt: true,
       }
     })
@@ -92,4 +99,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

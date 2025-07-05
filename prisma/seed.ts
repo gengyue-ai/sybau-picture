@@ -8,7 +8,7 @@ async function main() {
 
   // 1. 创建示例用户
   const hashedPassword = await bcrypt.hash('demo123', 10)
-  
+
   const demoUser = await prisma.user.upsert({
     where: { email: 'demo@sybaupicture.com' },
     update: {},
@@ -20,6 +20,72 @@ async function main() {
   })
 
   console.log('✅ 示例用户创建完成')
+
+  // 2. 创建套餐数据
+  const freePlan = await prisma.plan.upsert({
+    where: { name: 'free' },
+    update: {},
+    create: {
+      name: 'free',
+      displayName: 'Free',
+      description: 'Perfect for trying Sybau AI',
+      price: 0,
+      yearlyPrice: 0,
+      maxImagesPerMonth: 3,
+      maxResolution: '1024x1024',
+      hasWatermark: true,
+      hasPriorityProcessing: false,
+      hasBatchProcessing: false,
+      hasAdvancedFeatures: false,
+      availableStyles: JSON.stringify(['classic'])
+    }
+  })
+
+  const standardPlan = await prisma.plan.upsert({
+    where: { name: 'standard' },
+    update: {},
+    create: {
+      name: 'standard',
+      displayName: 'Standard',
+      description: 'Great for regular creators',
+      price: 9,
+      yearlyPrice: 72,
+      maxImagesPerMonth: 50,
+      maxResolution: '2048x2048',
+      hasWatermark: false,
+      hasPriorityProcessing: false,
+      hasBatchProcessing: false,
+      hasAdvancedFeatures: false,
+      availableStyles: JSON.stringify(['classic', 'exaggerated', 'minimal', 'professional'])
+    }
+  })
+
+  const proPlan = await prisma.plan.upsert({
+    where: { name: 'pro' },
+    update: {},
+    create: {
+      name: 'pro',
+      displayName: 'PRO',
+      description: 'For professional creators',
+      price: 19,
+      yearlyPrice: 144,
+      maxImagesPerMonth: 200,
+      maxResolution: '4096x4096',
+      hasWatermark: false,
+      hasPriorityProcessing: true,
+      hasBatchProcessing: true,
+      hasAdvancedFeatures: true,
+      availableStyles: JSON.stringify(['classic', 'exaggerated', 'minimal', 'professional', 'artistic', 'premium'])
+    }
+  })
+
+  // 将演示用户设置为免费套餐
+  await prisma.user.update({
+    where: { email: 'demo@sybaupicture.com' },
+    data: { planId: freePlan.id }
+  })
+
+  console.log('✅ 套餐数据创建完成')
 
   // 2. 创建翻译数据
   const translations = [
@@ -38,7 +104,7 @@ async function main() {
           subtitle: 'in Seconds',
           description: 'Transform any photo into hilarious Sybau Lazer Dim 700 style memes with our AI technology. No design skills required - just upload and watch the magic happen!',
           benefit1: '100% Free',
-          benefit2: 'No Registration', 
+          benefit2: 'No Registration',
           benefit3: 'HD Quality',
           benefit4: '8s Processing',
           supportedFormats: 'Supports JPG, PNG, WEBP up to 5MB',
@@ -1000,4 +1066,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect()
-  }) 
+  })

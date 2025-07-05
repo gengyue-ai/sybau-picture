@@ -34,7 +34,7 @@ export const authOptions: NextAuthOptions = {
           if (!prisma) {
             throw new Error('Database not configured')
           }
-          
+
           const user = await prisma.user.findUnique({
             where: { email: credentials.email.toLowerCase() }
           })
@@ -63,7 +63,7 @@ export const authOptions: NextAuthOptions = {
     })
   ],
   session: {
-    strategy: 'jwt',
+    strategy: 'database',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
@@ -89,6 +89,26 @@ export const authOptions: NextAuthOptions = {
     signIn: async ({ user, account, profile }) => {
       // 允许所有有效的登录
       return true
+    },
+    redirect: async ({ url, baseUrl }) => {
+      console.log('Redirect callback:', { url, baseUrl })
+
+      // 如果是相对路径，构建完整URL
+      if (url.startsWith('/')) {
+        const fullUrl = `${baseUrl}${url}`
+        console.log('Redirecting to relative path:', fullUrl)
+        return fullUrl
+      }
+
+      // 如果是同域名的完整URL，直接使用
+      if (url.startsWith(baseUrl)) {
+        console.log('Redirecting to same domain:', url)
+        return url
+      }
+
+      // 对于外部URL或其他情况，重定向到首页
+      console.log('Redirecting to base URL (fallback):', baseUrl)
+      return baseUrl
     },
   },
   events: {
