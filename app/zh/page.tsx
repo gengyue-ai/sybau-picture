@@ -2,26 +2,18 @@ import { Metadata } from 'next'
 import HomePageClient from '@/components/HomePageClient'
 
 export const metadata: Metadata = {
-  title: 'Sybau图片生成器 | 秒速制作病毒式表情包',
-  description: '使用我们的AI技术将任何照片转换成搞笑的Sybau Lazer Dim 700风格表情包。无需技能 - 免费试用！',
+  title: 'Sybau Picture | 创建病毒式创意内容 - Stay Young, Beautiful and Unique',
+  description: '使用AI将文本或图片转换为令人惊艳的创意视觉作品。体验Z时代Sybau文化 - Stay Young, Beautiful and Unique！',
   alternates: {
     canonical: '/zh',
     languages: {
       'en': '/',
       'zh': '/zh',
-      'es': '/es',
-      'ja': '/ja',
-      'ko': '/ko',
-      'fr': '/fr',
-      'de': '/de',
-      'pt': '/pt',
-      'ru': '/ru',
-      'ar': '/ar',
     },
   },
   openGraph: {
-    title: 'Sybau图片生成器 | 秒速制作病毒式表情包',
-    description: '使用我们的AI技术将任何照片转换成搞笑的Sybau Lazer Dim 700风格表情包。',
+    title: 'Sybau Picture | 创建病毒式创意内容',
+    description: '使用AI将文本或图片转换为令人惊艳的创意视觉作品。体验Sybau文化 - Stay Young, Beautiful and Unique！',
     images: ['/og-image.webp'],
     locale: 'zh_CN',
   },
@@ -55,8 +47,8 @@ export default function ChineseHomePage() {
           })
         }}
       />
-      
+
       <HomePageClient />
     </>
   )
-} 
+}

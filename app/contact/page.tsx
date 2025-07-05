@@ -1,48 +1,52 @@
 'use client'
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Mail, Phone, Clock, Send, MessageCircle } from 'lucide-react'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
+import { Card, CardContent } from '@/components/ui/card'
+import { Mail, MessageSquare } from 'lucide-react'
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
       <div className="container mx-auto px-4 pt-20 pb-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Contact Us</h1>
           <p className="text-xl text-gray-600">Get in touch with our team</p>
         </div>
+
         <div className="max-w-4xl mx-auto">
           <Card>
             <CardContent className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center mb-8">
+                <h3 className="font-semibold mb-4">Thank you for your interest in Sybau Picture</h3>
+                <p className="text-gray-600">We appreciate your feedback and inquiries about our AI-powered image generation platform.</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-8 max-w-2xl mx-auto">
                 <div className="text-center">
-                  <Mail className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Email</h3>
-                  <p className="text-gray-600">support@sybaupicture.com</p>
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Mail className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h4 className="font-semibold mb-2">Email Support</h4>
+                  <p className="text-gray-600 text-sm mb-2">Get help with technical issues</p>
+                  <a href="mailto:support@sybaupicture.com" className="text-blue-600 hover:text-blue-800">
+                    support@sybaupicture.com
+                  </a>
                 </div>
+
                 <div className="text-center">
-                  <MessageCircle className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Live Chat</h3>
-                  <p className="text-gray-600">Available 24/7</p>
-                </div>
-                <div className="text-center">
-                  <Clock className="w-12 h-12 text-purple-600 mx-auto mb-4" />
-                  <h3 className="font-semibold mb-2">Support Hours</h3>
-                  <p className="text-gray-600">9 AM - 6 PM PST</p>
+                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <MessageSquare className="w-8 h-8 text-green-600" />
+                  </div>
+                  <h4 className="font-semibold mb-2">General Inquiries</h4>
+                  <p className="text-gray-600 text-sm mb-2">Questions about our platform</p>
+                  <a href="mailto:hello@sybaupicture.com" className="text-green-600 hover:text-green-800">
+                    hello@sybaupicture.com
+                  </a>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
-      <Footer />
     </div>
   )
 }

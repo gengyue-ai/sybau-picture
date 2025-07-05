@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const locales = ['en', 'zh', 'es', 'ja', 'ko', 'fr', 'de', 'pt', 'ru', 'ar']
+const locales = ['en', 'zh']
 const defaultLocale = 'en'
 
 // 获取当前URL的语言
@@ -28,7 +28,7 @@ export function middleware(request: NextRequest) {
   }
 
   const currentLocale = getCurrentLocale(pathname)
-  
+
   // 如果URL已经包含语言代码，直接继续（用户主动选择的语言）
   if (currentLocale) {
     return NextResponse.next()
@@ -43,4 +43,4 @@ export const config = {
   matcher: [
     '/((?!api|_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)',
   ],
-} 
+}

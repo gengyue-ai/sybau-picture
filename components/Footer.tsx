@@ -10,27 +10,18 @@ import { generateLocalizedLink } from '@/lib/i18n'
 
 const FOOTER_LINKS = {
   product: [
-    { name: 'footer.product.generator', fallback: 'AI Generator', href: '/generator' },
     { name: 'footer.product.gallery', fallback: 'Gallery', href: '/gallery' },
-    { name: 'footer.product.blog', fallback: 'Blog', href: '/blog' },
-    { name: 'footer.product.about', fallback: 'About Us', href: '/about' }
   ],
   resources: [
     { name: 'footer.resources.help', fallback: 'Help Guide', href: '/help' },
-    { name: 'footer.resources.updates', fallback: 'Latest Updates', href: '/blog' },
-    { name: 'footer.resources.api', fallback: 'API Docs', href: '/api' },
-    { name: 'footer.resources.developers', fallback: 'Developers', href: '/developers' }
   ],
   company: [
     { name: 'footer.company.privacy', fallback: 'Privacy Policy', href: '/privacy' },
     { name: 'footer.company.terms', fallback: 'Terms of Service', href: '/terms' },
     { name: 'footer.company.contact', fallback: 'Contact Us', href: '/contact' },
-    { name: 'footer.company.careers', fallback: 'Join Us', href: '/careers' }
   ],
   support: [
     { name: 'footer.support.help', fallback: 'Help Center', href: '/help' },
-    { name: 'footer.support.community', fallback: 'Community', href: '/community' },
-    { name: 'footer.support.feedback', fallback: 'Feedback', href: '/feedback' },
     { name: 'footer.support.technical', fallback: 'Technical Support', href: '/support' }
   ]
 }
@@ -91,7 +82,7 @@ export default function Footer() {
               </div>
             </Link>
             <p className="text-gray-400 mb-6 leading-relaxed">
-              {t('footer.description', 'The world\'s first AI meme generator platform focused on Sybau Lazer Dim 700 style. Making viral content creation accessible to everyone.')}
+              {t('footer.description', 'The world\'s first AI meme generator platform focused on Sybau style. Making viral content creation accessible to everyone.')}
             </p>
 
             {/* Social Links */}

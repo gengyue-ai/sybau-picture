@@ -25,14 +25,6 @@ export const metadata: Metadata = {
     languages: {
       'en-US': '/en',
       'zh-CN': '/zh',
-      'es-ES': '/es',
-      'ja-JP': '/ja',
-      'ko-KR': '/ko',
-      'fr-FR': '/fr',
-      'de-DE': '/de',
-      'pt-PT': '/pt',
-      'ru-RU': '/ru',
-      'ar-SA': '/ar',
     },
   },
   openGraph: {
@@ -92,4 +84,4 @@ export default function RootLayout({
       </body>
     </html>
   )
-} 
+}

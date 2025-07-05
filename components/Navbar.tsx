@@ -14,13 +14,6 @@ import { generateLocalizedLink } from '@/lib/i18n'
 
 const NAVIGATION_ITEMS = [
   {
-    name: 'nav.generator',
-    href: '/generator',
-    icon: Palette,
-    description: 'AI Generator',
-    fallback: 'Generator'
-  },
-  {
     name: 'nav.gallery',
     href: '/gallery',
     icon: Image,
@@ -28,18 +21,11 @@ const NAVIGATION_ITEMS = [
     fallback: 'Gallery'
   },
   {
-    name: 'nav.blog',
-    href: '/blog',
-    icon: BookOpen,
-    description: 'Blog Posts',
-    fallback: 'Blog'
-  },
-  {
-    name: 'nav.about',
-    href: '/about',
-    icon: Info,
-    description: 'About Us',
-    fallback: 'About'
+    name: 'nav.pricing',
+    href: '/pricing',
+    icon: Star,
+    description: 'Pricing Plans',
+    fallback: 'Pricing'
   }
 ]
 
@@ -55,6 +41,7 @@ export default function Navbar() {
     'nav.home': 'Home',
     'nav.generator': 'Generator',
     'nav.gallery': 'Gallery',
+    'nav.pricing': 'Pricing',
     'nav.blog': 'Blog',
     'nav.about': 'About',
     'nav.tryFree': 'Try Free',
@@ -275,7 +262,7 @@ export default function Navbar() {
 
                   {/* Mobile Footer */}
                   <div className="border-t border-gray-200 pt-4">
-                    <Link href={generateLocalizedLink('/generator', pathname)} onClick={() => setIsMobileMenuOpen(false)}>
+                    <Link href={generateLocalizedLink('/', pathname)} onClick={() => setIsMobileMenuOpen(false)}>
                       <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-xl shadow-lg">
                         <Rocket className="w-4 h-4 mr-2" />
                         {getText('nav.startCreating')}

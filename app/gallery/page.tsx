@@ -9,80 +9,92 @@ import { ArrowLeft, Search, TrendingUp, Heart, Download, Share2, Eye, Star, Spar
 import { usePathname } from 'next/navigation'
 import { generateLocalizedLink } from '@/lib/i18n'
 
-// Static mock data for demonstration - Updated with funny Sybau-style content
+// Static mock data for demonstration - Updated with local Sybau generated images
 const mockImages = [
   {
     id: '1',
-    processedImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=500&h=500&fit=crop',
+    processedImage: '/images/gallery/lucky-girl.jpg',
     style: 'classic',
-    intensity: 3,
-    createdAt: '2024-01-15',
-    user: { name: 'MemeMaster69', image: '' },
-    stats: { views: 12340, likes: 890, downloads: 456 },
-    title: 'When You See Your Credit Card Bill',
-    description: 'Classic Sybau style perfectly captures the internal breakdown when seeing your credit card statement'
+    intensity: 4,
+    createdAt: '2024-01-18',
+    user: { name: 'SybauCreator', image: '' },
+    stats: { views: 25600, likes: 1890, downloads: 720 },
+    title: 'Lucky Girl Portrait',
+    description: 'A beautiful portrait showcasing the classic Sybau style with gentle enhancement',
+    prompt: 'a lucky girl',
+    promptDescription: 'Simple yet effective prompt that captures the essence of optimism and beauty'
   },
   {
     id: '2',
-    processedImage: 'https://images.unsplash.com/photo-1574158622682-e40e69881006?w=500&h=500&fit=crop',
-    style: 'exaggerated',
-    intensity: 5,
-    createdAt: '2024-01-14',
-    user: { name: 'LazerDimLord', image: '' },
-    stats: { views: 23450, likes: 1560, downloads: 780 },
-    title: 'Boss Says Weekend Overtime',
-    description: 'Exaggerated Sybau expression vividly shows the despair of hearing weekend overtime news'
+    processedImage: '/images/gallery/business-leader.jpg',
+    style: 'professional',
+    intensity: 3,
+    createdAt: '2024-01-17',
+    user: { name: 'BusinessPro', image: '' },
+    stats: { views: 18400, likes: 1240, downloads: 580 },
+    title: 'Confident Business Leader',
+    description: 'Professional portrait with Sybau enhancement perfect for corporate use',
+    prompt: 'confident business person in suit, professional lighting',
+    promptDescription: 'Detailed prompt focusing on professional appearance and lighting'
   },
   {
     id: '3',
-    processedImage: 'https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?w=500&h=500&fit=crop',
-    style: 'minimal',
-    intensity: 2,
-    createdAt: '2024-01-13',
-    user: { name: 'SybauKing', image: '' },
-    stats: { views: 34560, likes: 2340, downloads: 1230 },
-    title: 'Pretending to Understand',
-    description: 'Minimalist Sybau style perfectly portrays the expression of pretending to understand in meetings'
+    processedImage: '/images/gallery/creative-portrait.jpg',
+    style: 'artistic',
+    intensity: 5,
+    createdAt: '2024-01-16',
+    user: { name: 'ArtisticVision', image: '' },
+    stats: { views: 34200, likes: 2650, downloads: 1120 },
+    title: 'Creative Portrait',
+    description: 'Artistic Sybau style capturing unique creative expression',
+    prompt: 'artistic portrait with creative composition',
+    promptDescription: 'Artistic prompt emphasizing unique visual composition'
   },
   {
     id: '4',
-    processedImage: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?w=500&h=500&fit=crop',
-    style: 'viral',
+    processedImage: '/images/gallery/contemporary-look.jpg',
+    style: 'modern',
     intensity: 4,
-    createdAt: '2024-01-12',
-    user: { name: 'ViralMemeGod', image: '' },
-    stats: { views: 456700, likes: 34500, downloads: 18900 },
-    title: 'Finding WiFi Password is 12345',
-    description: 'Viral Sybau expression shows the surprise of discovering your neighbor\'s WiFi password'
+    createdAt: '2024-01-15',
+    user: { name: 'ModernStyle', image: '' },
+    stats: { views: 42800, likes: 3420, downloads: 1680 },
+    title: 'Contemporary Look',
+    description: 'Modern Sybau processing highlighting contemporary style and expression',
+    prompt: 'modern portrait with clean aesthetics',
+    promptDescription: 'Contemporary style prompt with emphasis on modern aesthetics'
   },
   {
     id: '5',
-    processedImage: 'https://images.unsplash.com/photo-1561037404-61cd46aa615b?w=500&h=500&fit=crop',
-    style: 'trending',
-    intensity: 3,
-    createdAt: '2024-01-11',
-    user: { name: 'TrendSetter2024', image: '' },
-    stats: { views: 567800, likes: 45600, downloads: 23400 },
-    title: 'Delivery Guy Can\'t Find Your Door',
-    description: 'Trending Sybau style perfectly captures the delivery person\'s mood when circling your building'
+    processedImage: '/images/gallery/dynamic-expression.jpg',
+    style: 'expressive',
+    intensity: 5,
+    createdAt: '2024-01-14',
+    user: { name: 'ExpressionMaster', image: '' },
+    stats: { views: 156700, likes: 12400, downloads: 5680 },
+    title: 'Dynamic Expression',
+    description: 'High-intensity Sybau creation capturing dynamic emotional expression',
+    prompt: 'expressive portrait with dynamic lighting',
+    promptDescription: 'Expression-focused prompt with emphasis on dynamic lighting effects'
   },
   {
     id: '6',
-    processedImage: 'https://images.unsplash.com/photo-1592194996308-7b43878e84a6?w=500&h=500&fit=crop',
-    style: 'featured',
-    intensity: 5,
-    createdAt: '2024-01-10',
-    user: { name: 'FeaturedCreator', image: '' },
-    stats: { views: 678900, likes: 56700, downloads: 34500 },
-    title: 'Monday Morning Me',
-    description: 'Featured Sybau creation vividly shows the painful expression of not wanting to get up on Monday morning'
+    processedImage: '/images/gallery/elegant-portrait.jpg',
+    style: 'elegant',
+    intensity: 3,
+    createdAt: '2024-01-13',
+    user: { name: 'ElegantCreator', image: '' },
+    stats: { views: 78900, likes: 5670, downloads: 2890 },
+    title: 'Elegant Portrait',
+    description: 'Sophisticated Sybau style emphasizing elegance and refinement',
+    prompt: 'elegant portrait with sophisticated styling',
+    promptDescription: 'Elegance-focused prompt emphasizing sophisticated composition'
   }
 ]
 
 const staticTexts = {
   title: 'Sybau Gallery',
-  subtitle: 'Explore Amazing Sybau AI-Generated Memes',
-  description: 'Discover thousands of hilarious Sybau memes created by our community with advanced AI technology. Each Sybau creation represents the unique style and humor that makes this format go viral.',
+  subtitle: 'Explore Amazing AI-Generated Creative Content',
+  description: 'Discover thousands of stunning Sybau creations made by our community with advanced AI technology. Each piece embodies the Gen Z spirit - Stay Young, Beautiful and Unique.',
   searchPlaceholder: 'Search Sybau styles, categories, or keywords...',
   backToHome: 'Back to Home',
   allCategories: 'All Sybau Styles',
@@ -90,11 +102,11 @@ const staticTexts = {
   views: 'views',
   downloads: 'downloads',
   createdBy: 'Created by',
-  ctaTitle: 'Ready to Create Your Own Sybau Memes?',
-  ctaDescription: 'Join our community of Sybau creators and make viral content with AI technology',
+  ctaTitle: 'Ready to Create Your Own Sybau Content?',
+  ctaDescription: 'Join our community of Sybau creators and express your unique style with AI technology',
   startCreating: 'Start Creating Sybau',
   viewTutorials: 'View Sybau Tutorials',
-  aboutSybau: 'About Sybau Style',
+  aboutSybau: 'About Sybau Culture',
   stylesTitle: 'Popular Sybau Styles',
   communityTitle: 'Sybau Community',
   tipsTitle: 'Sybau Creation Tips'
@@ -308,6 +320,21 @@ export default function GalleryPage() {
                     </div>
                   </div>
                   <div className="p-4">
+                    <h3 className="font-semibold text-lg mb-2">{image.title}</h3>
+                    <p className="text-gray-600 text-sm mb-3">{image.description}</p>
+
+                    {/* Prompt Section */}
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg p-3 mb-3">
+                      <div className="flex items-center mb-2">
+                        <Sparkles className="w-4 h-4 text-purple-500 mr-2" />
+                        <span className="text-sm font-medium text-purple-700">Prompt Used:</span>
+                      </div>
+                      <p className="text-sm font-mono bg-white px-2 py-1 rounded border italic">
+                        "{image.prompt}"
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">{image.promptDescription}</p>
+                    </div>
+
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <Badge variant="outline" className="text-xs">

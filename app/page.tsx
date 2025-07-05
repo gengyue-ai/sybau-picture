@@ -2,11 +2,11 @@ import { Metadata } from 'next'
 import HomePageClient from '@/components/HomePageClient'
 
 export const metadata: Metadata = {
-  title: 'Sybau Picture Generator | Create Viral Memes in Seconds',
-  description: 'Turn any photo into hilarious Sybau Lazer Dim 700 style memes with our AI technology. No skills required - try it free!',
+  title: 'Sybau Picture | Create Viral Creative Content - Stay Young, Beautiful and Unique',
+  description: 'Transform text or images into stunning creative visuals with AI. Experience the Sybau culture inspired by Gen Z - Stay Young, Beautiful and Unique!',
   openGraph: {
-    title: 'Sybau Picture Generator | Create Viral Memes in Seconds',
-    description: 'Turn any photo into hilarious Sybau Lazer Dim 700 style memes with our AI technology.',
+    title: 'Sybau Picture | Create Viral Creative Content',
+    description: 'Transform text or images into stunning creative visuals with AI. Experience the Sybau culture - Stay Young, Beautiful and Unique!',
     images: ['/og-image.webp'],
   },
 }
@@ -38,8 +38,8 @@ export default function HomePage() {
           })
         }}
       />
-      
+
       <HomePageClient />
     </>
   )
-} 
+}

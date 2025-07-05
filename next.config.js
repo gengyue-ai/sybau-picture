@@ -44,43 +44,48 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
-      },
+
     ],
     formats: ['image/webp', 'image/avif'],
   },
   async rewrites() {
     return [
-      // SEO友好的URL重写
+      // SEO友好的URL重写 - 重定向到首页（generator功能已集成到首页）
       {
         source: '/meme-generator',
-        destination: '/generator'
+        destination: '/'
       },
       {
         source: '/create-sybau-meme',
-        destination: '/generator'
+        destination: '/'
       },
       {
         source: '/ai-meme-maker',
-        destination: '/generator'
+        destination: '/'
       }
     ]
   },
   async redirects() {
     return [
-      // 重定向旧URL到新URL
+      // 重定向旧URL到首页
       {
         source: '/old-generator',
-        destination: '/generator',
+        destination: '/',
         permanent: true
       },
       {
         source: '/create',
-        destination: '/generator',
+        destination: '/',
+        permanent: true
+      },
+      {
+        source: '/generator',
+        destination: '/',
+        permanent: true
+      },
+      {
+        source: '/zh/generator',
+        destination: '/zh',
         permanent: true
       }
     ]
@@ -133,4 +138,4 @@ const nextConfig = {
   poweredByHeader: false, // 隐藏X-Powered-By头部
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig

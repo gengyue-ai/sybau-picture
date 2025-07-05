@@ -3,14 +3,6 @@ import { prisma } from '@/lib/prisma'
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
   { code: 'zh', name: 'Chinese', native: '中文' },
-  { code: 'es', name: 'Spanish', native: 'Español' },
-  { code: 'ja', name: 'Japanese', native: '日本語' },
-  { code: 'ko', name: 'Korean', native: '한국어' },
-  { code: 'fr', name: 'French', native: 'Français' },
-  { code: 'de', name: 'German', native: 'Deutsch' },
-  { code: 'pt', name: 'Portuguese', native: 'Português' },
-  { code: 'ru', name: 'Russian', native: 'Русский' },
-  { code: 'ar', name: 'Arabic', native: 'العربية' },
 ] as const
 
 export type SupportedLanguage = typeof SUPPORTED_LANGUAGES[number]['code']
@@ -76,6 +68,7 @@ export const fallbackTranslations = {
       nav: {
         generator: 'Generator',
         gallery: 'Gallery',
+        pricing: 'Pricing',
         blog: 'Blog',
         about: 'About',
         tryFree: 'Try Free',
@@ -491,6 +484,7 @@ export const fallbackTranslations = {
       nav: {
         generator: '生成器',
         gallery: '画廊',
+        pricing: '定价',
         blog: '博客',
         about: '关于我们',
         tryFree: '免费试用',
