@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
+
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Menu, X, Sparkles, Home, Image, BookOpen, Info, Palette, Globe, ChevronDown, Rocket, Star, Heart } from 'lucide-react'
+import { Menu, Sparkles, Image, ChevronDown, Star, User, LogOut, Settings, Rocket, Heart, Globe } from 'lucide-react'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useTranslation } from '@/hooks/useTranslation'
 import { generateLocalizedLink } from '@/lib/i18n'
+import { useSession, signOut } from 'next-auth/react'
 
 const NAVIGATION_ITEMS = [
   {
@@ -32,9 +33,10 @@ const NAVIGATION_ITEMS = [
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [hasLoadedOnce, setHasLoadedOnce] = useState(false)
+
   const pathname = usePathname()
   const { t, isLoading } = useTranslation('/')
+  const session = useSession()
 
   // 静态文本备用选项，确保即使翻译失败也能显示
   const staticTexts = {
@@ -67,21 +69,12 @@ export default function Navbar() {
 
   // 设置最大loading时间为100ms，防止永久loading
   useEffect(() => {
-    if (!isLoading) {
-      setHasLoadedOnce(true)
-    }
-
     const maxLoadingTimer = setTimeout(() => {
-      setHasLoadedOnce(true)
+      // 强制结束loading
     }, 100) // 100ms后强制结束loading
 
     return () => clearTimeout(maxLoadingTimer)
   }, [isLoading])
-
-  // 在组件挂载时立即设置为已加载，避免loading状态
-  useEffect(() => {
-    setHasLoadedOnce(true)
-  }, [])
 
   const isActive = (href: string) => {
     if (href === '/') {
@@ -179,7 +172,45 @@ export default function Navbar() {
               <LanguageSwitcher variant="ghost" size="sm" />
             </div>
 
-
+            {/* User Actions */}
+            {session.data ? (
+              <>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="hidden md:flex">
+                      <User className="w-4 h-4 mr-2" />
+                      {session.data.user?.name || session.data.user?.email}
+                      <ChevronDown className="w-4 h-4 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem asChild>
+                      <Link href="/history">
+                        <Settings className="w-4 h-4 mr-2" />
+                        {getText('nav.history', 'History')}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => signOut()}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      {getText('nav.logout', 'Logout')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            ) : (
+              <div className="hidden md:flex items-center space-x-2">
+                <Link href="/auth/signin">
+                  <Button variant="outline" size="sm">
+                    {getText('nav.signin', 'Sign In')}
+                  </Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                    {getText('nav.signup', 'Sign Up')}
+                  </Button>
+                </Link>
+              </div>
+            )}
 
             {/* Mobile Menu */}
             <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
@@ -262,8 +293,52 @@ export default function Navbar() {
 
                   {/* Mobile Footer */}
                   <div className="border-t border-gray-200 pt-4">
+                    {session.data ? (
+                      <div className="space-y-3">
+                        <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl">
+                          <User className="w-8 h-8 text-purple-600" />
+                          <div>
+                            <div className="font-medium text-gray-800">
+                              {session.data.user?.name || session.data.user?.email}
+                            </div>
+                            <div className="text-sm text-gray-500">已登录</div>
+                          </div>
+                        </div>
+                        <Link href="/history" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Button variant="outline" className="w-full mb-2">
+                            <Settings className="w-4 h-4 mr-2" />
+                            {getText('nav.history', 'History')}
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          className="w-full mb-3"
+                          onClick={() => {
+                            signOut()
+                            setIsMobileMenuOpen(false)
+                          }}
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          {getText('nav.logout', 'Logout')}
+                        </Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <Link href="/auth/signin" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Button variant="outline" className="w-full">
+                            {getText('nav.signin', 'Sign In')}
+                          </Button>
+                        </Link>
+                        <Link href="/auth/signup" onClick={() => setIsMobileMenuOpen(false)}>
+                          <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                            {getText('nav.signup', 'Sign Up')}
+                          </Button>
+                        </Link>
+                      </div>
+                    )}
+
                     <Link href={generateLocalizedLink('/', pathname)} onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-xl shadow-lg">
+                      <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-xl shadow-lg mt-4">
                         <Rocket className="w-4 h-4 mr-2" />
                         {getText('nav.startCreating')}
                       </Button>

@@ -1,17 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server'
-import * as fal from '@fal-ai/serverless-client'
+import { getServerSession } from 'next-auth/next'
+import { authOptions } from '@/lib/auth'
+import {
+  getCurrentUserWithSubscription,
+  canUserGenerateImage,
+  recordImageGeneration,
+  getUserPlanFeatures
+} from '@/lib/subscription'
 
-// 配置 Fal AI 客户端
-const falKey = process.env.FAL_KEY || '71163de2-482a-46e5-821c-ccef71f7caae:2cec66a501188bdb77c78e85191693ba'
-console.log('Using Fal API Key:', falKey.substring(0, 10) + '...')
+// 配置 Fal AI 客户端的函数
+async function configureFalClient() {
+  const fal = await import('@fal-ai/serverless-client')
+  const falKey = process.env.FAL_KEY || '71163de2-482a-46e5-821c-ccef71f7caae:2cec66a501188bdb77c78e85191693ba'
+  console.log('Using Fal API Key:', falKey.substring(0, 10) + '...')
 
-fal.config({
-  credentials: falKey
-})
+  fal.config({
+    credentials: falKey
+  })
+
+  return { fal, falKey }
+}
 
 export async function POST(request: NextRequest) {
   try {
     console.log('=== Starting image generation ===')
+
+    // 配置 Fal AI 客户端
+    const { fal } = await configureFalClient()
+
+    // 检查用户认证
+    const session = await getServerSession(authOptions)
+    if (!session?.user?.email) {
+      return NextResponse.json({
+        success: false,
+        error: 'Authentication required. Please sign in to generate images.',
+        code: 'UNAUTHORIZED'
+      }, { status: 401 })
+    }
+
+    // 获取用户信息
+    const user = await getCurrentUserWithSubscription()
+    if (!user) {
+      return NextResponse.json({
+        success: false,
+        error: 'User not found',
+        code: 'USER_NOT_FOUND'
+      }, { status: 404 })
+    }
+
+    // 检查用户是否可以生成图片
+    const usageCheck = await canUserGenerateImage(user.id)
+    if (!usageCheck.canGenerate) {
+      return NextResponse.json({
+        success: false,
+        error: `Monthly limit exceeded. You have used ${usageCheck.currentUsage}/${usageCheck.maxUsage} images this month.`,
+        code: 'QUOTA_EXCEEDED',
+        usage: usageCheck
+      }, { status: 429 })
+    }
+
+    console.log(`User ${user.email} can generate image. Usage: ${usageCheck.currentUsage}/${usageCheck.maxUsage}`)
+
     const contentType = request.headers.get('content-type')
     console.log('Content-Type:', contentType)
 
@@ -89,11 +138,25 @@ export async function POST(request: NextRequest) {
 
     if (apiResult.images && apiResult.images.length > 0) {
       console.log('✅ Image generated successfully!')
+
+      // 记录用户使用情况
+      await recordImageGeneration(user.id)
+      console.log(`Recorded image generation for user ${user.email}`)
+
+      // 获取用户套餐特性以确定是否应该有水印
+      const planFeatures = await getUserPlanFeatures(user.id)
+
       return NextResponse.json({
         success: true,
         imageUrl: apiResult.images[0].url,
         prompt: prompt,
-        model: model
+        model: model,
+        hasWatermark: planFeatures.hasWatermark,
+        usage: {
+          current: usageCheck.currentUsage + 1,
+          max: usageCheck.maxUsage,
+          remaining: usageCheck.remainingUsage - 1
+        }
       })
     } else {
       console.log('❌ No images in result:', result)
@@ -133,14 +196,11 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
+  const { falKey } = await configureFalClient()
+
   return NextResponse.json({
-    message: 'Sybau Picture Generator API',
-    version: '1.0.0',
-    models: [
-      'fal-ai/flux/schnell',
-      'fal-ai/flux/dev',
-      'fal-ai/fast-sdxl'
-    ],
-    apiKeyConfigured: !!falKey
+    status: 'OK',
+    message: 'Fal AI Generate API is running',
+    keyConfigured: !!falKey
   })
 }

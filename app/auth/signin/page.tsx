@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { signIn, getSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,7 +11,53 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Mail, Lock, Loader2 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+
+
+// 国际化文本
+const texts = {
+  en: {
+    backToHome: 'Back to Home',
+    welcomeBack: 'Welcome back',
+    signInDescription: 'Sign in to your account to continue creating amazing memes',
+    continueWithGoogle: 'Continue with Google',
+    orContinueWith: 'Or continue with email',
+    email: 'Email',
+    enterEmail: 'Enter your email',
+    password: 'Password',
+    enterPassword: 'Enter your password',
+    signIn: 'Sign In',
+    signingIn: 'Signing in...',
+    invalidCredentials: 'Invalid email or password',
+    somethingWentWrong: 'Something went wrong. Please try again.',
+    failedGoogleSignIn: 'Failed to sign in with Google',
+    dontHaveAccount: "Don't have an account? ",
+    signUp: 'Sign up'
+  },
+  zh: {
+    backToHome: '返回首页',
+    welcomeBack: '欢迎回来',
+    signInDescription: '登录您的账户，继续创作精彩的表情包',
+    continueWithGoogle: '使用 Google 登录',
+    orContinueWith: '或使用邮箱登录',
+    email: '邮箱',
+    enterEmail: '请输入您的邮箱',
+    password: '密码',
+    enterPassword: '请输入您的密码',
+    signIn: '登录',
+    signingIn: '登录中...',
+    invalidCredentials: '邮箱或密码错误',
+    somethingWentWrong: '出现错误，请重试。',
+    failedGoogleSignIn: 'Google 登录失败',
+    dontHaveAccount: '还没有账户？',
+    signUp: '注册'
+  }
+}
+
+// 获取当前语言
+function getCurrentLanguage(pathname: string): 'en' | 'zh' {
+  if (pathname.startsWith('/zh')) return 'zh'
+  return 'en'
+}
 
 export default function SignInPage() {
   const [email, setEmail] = useState('')
@@ -19,6 +65,9 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const pathname = usePathname()
+  const language = getCurrentLanguage(pathname)
+  const t = texts[language]
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,17 +82,17 @@ export default function SignInPage() {
       })
 
       if (result?.error) {
-        setError('Invalid email or password')
+        setError(t.invalidCredentials)
       } else {
         // 获取最新的session
         const session = await getSession()
         if (session) {
-          router.push('/generator')
+          router.push('/')
           router.refresh()
         }
       }
     } catch (error) {
-      setError('Something went wrong. Please try again.')
+      setError(t.somethingWentWrong)
     } finally {
       setIsLoading(false)
     }
@@ -52,9 +101,13 @@ export default function SignInPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true)
     try {
-      await signIn('google', { callbackUrl: '/generator' })
+      // 获取回调URL参数，如果没有则默认重定向到首页
+      const urlParams = new URLSearchParams(window.location.search)
+      const callbackUrl = urlParams.get('callbackUrl') || '/'
+
+      await signIn('google', { callbackUrl })
     } catch (error) {
-      setError('Failed to sign in with Google')
+      setError(t.failedGoogleSignIn)
       setIsLoading(false)
     }
   }
@@ -63,17 +116,22 @@ export default function SignInPage() {
     <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b">
-        <div className="container flex h-16 items-center">
-          <Link href="/" className="flex items-center space-x-2">
+        <div className="container flex h-16 items-center justify-between">
+          <Link href="/" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
             <ArrowLeft className="h-4 w-4" />
-            <span className="text-sm font-medium">Back to Home</span>
+            <span className="text-lg font-medium">{t.backToHome}</span>
           </Link>
-          
-          <div className="ml-8 flex items-center space-x-2">
-            <div className="h-8 w-8 bg-primary rounded-md flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">S</span>
-            </div>
-            <span className="text-xl font-bold">Sybau Picture</span>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                const newPath = language === 'zh' ? '/auth/signin' : '/zh/auth/signin'
+                router.push(newPath)
+              }}
+            >
+              {language === 'zh' ? 'English' : '中文'}
+            </Button>
           </div>
         </div>
       </header>
@@ -82,12 +140,12 @@ export default function SignInPage() {
       <div className="flex-1 flex items-center justify-center p-4">
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome back</CardTitle>
+            <CardTitle className="text-2xl">{t.welcomeBack}</CardTitle>
             <CardDescription>
-              Sign in to your account to continue creating amazing memes
+              {t.signInDescription}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-6">
             {/* Google Sign In */}
             <Button
@@ -118,7 +176,7 @@ export default function SignInPage() {
                   />
                 </svg>
               )}
-              Continue with Google
+{t.continueWithGoogle}
             </Button>
 
             <div className="relative">
@@ -127,7 +185,7 @@ export default function SignInPage() {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background px-2 text-muted-foreground">
-                  Or continue with email
+                  {t.orContinueWith}
                 </span>
               </div>
             </div>
@@ -135,13 +193,13 @@ export default function SignInPage() {
             {/* Email Sign In Form */}
             <form onSubmit={handleEmailSignIn} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{t.email}</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder={t.enterEmail}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="pl-10"
@@ -151,13 +209,13 @@ export default function SignInPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{t.password}</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder={t.enterPassword}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="pl-10"
@@ -180,32 +238,32 @@ export default function SignInPage() {
                 {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Signing in...
+                    {t.signingIn}
                   </>
                 ) : (
-                  'Sign In'
+                  t.signIn
                 )}
               </Button>
             </form>
 
             {/* Sign Up Link */}
             <div className="text-center text-sm">
-              <span className="text-muted-foreground">Don't have an account? </span>
-              <Link 
-                href="/auth/signup" 
+              <span className="text-muted-foreground">{t.dontHaveAccount}</span>
+              <Link
+                href={language === 'zh' ? '/zh/auth/signup' : '/auth/signup'}
                 className="font-medium text-primary hover:underline"
               >
-                Sign up
+                {t.signUp}
               </Link>
             </div>
 
             {/* Forgot Password */}
             <div className="text-center">
-              <Link 
-                href="/auth/forgot-password" 
+              <Link
+                href="/auth/forgot-password"
                 className="text-sm text-muted-foreground "
               >
-                Forgot your password?
+                {language === 'zh' ? '忘记密码？' : 'Forgot your password?'}
               </Link>
             </div>
           </CardContent>
@@ -216,17 +274,17 @@ export default function SignInPage() {
       <div className="border-t py-6">
         <div className="container text-center text-sm text-muted-foreground">
           <p>
-            By signing in, you agree to our{' '}
+            {language === 'zh' ? '登录即表示您同意我们的' : 'By signing in, you agree to our'}{' '}
             <Link href="/terms" className="underline ">
-              Terms of Service
+              {language === 'zh' ? '服务条款' : 'Terms of Service'}
             </Link>{' '}
-            and{' '}
+            {language === 'zh' ? '和' : 'and'}{' '}
             <Link href="/privacy" className="underline ">
-              Privacy Policy
+              {language === 'zh' ? '隐私政策' : 'Privacy Policy'}
             </Link>
           </p>
         </div>
       </div>
     </div>
   )
-} 
+}

@@ -3,9 +3,11 @@
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Check, X, Star, Sparkles, Zap, Crown, Shield, Users, Rocket } from 'lucide-react'
+import { Check, X, Star, Sparkles, Zap, Crown, Shield, Users, Rocket, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { toast } from '@/hooks/use-toast'
 
 const getPricingPlans = (isAnnual: boolean) => [
   {
@@ -107,16 +109,65 @@ const faqs = [
 
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(true)
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const pricingPlans = getPricingPlans(isAnnual)
   const router = useRouter()
+  const { data: session, status } = useSession()
 
-  const handlePlanClick = (planId: string) => {
+  const handlePlanClick = async (planId: string) => {
     if (planId === 'free') {
       // 免费版直接跳转到主页使用生成器
       router.push('/')
-    } else {
-      // 付费版跳转到注册页面
-      router.push('/auth/signup')
+      return
+    }
+
+    // 检查用户是否已登录
+    if (status === 'loading') {
+      return
+    }
+
+    if (!session) {
+      // 未登录用户跳转到登录页面
+      router.push('/auth/signin?callbackUrl=/pricing')
+      return
+    }
+
+    // 开始支付流程
+    setLoadingPlan(planId)
+
+    try {
+      const response = await fetch('/api/payment/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planType: planId,
+          billingCycle: isAnnual ? 'yearly' : 'monthly'
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      if (data.url) {
+        // 重定向到Stripe结算页面
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL received')
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      toast({
+        title: "支付失败",
+        description: error instanceof Error ? error.message : "创建支付会话失败，请稍后再试",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingPlan(null)
     }
   }
 
@@ -209,8 +260,16 @@ export default function PricingPage() {
                     variant={plan.buttonVariant}
                     size="lg"
                     onClick={() => handlePlanClick(plan.id)}
+                    disabled={loadingPlan === plan.id}
                   >
-                    {plan.buttonText}
+                    {loadingPlan === plan.id ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      plan.buttonText
+                    )}
                   </Button>
 
                   <div className="space-y-4">

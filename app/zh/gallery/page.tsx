@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, Search, TrendingUp, Heart, Download, Share2, Eye, Star, Sparkles, Zap, Award, Clock, Rocket, Shield, Users, Check } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Heart, Download, Share2, Eye, Star, Sparkles, Zap, Award, Clock, Rocket, Shield, Users, Check } from 'lucide-react'
 
 // 静态真实案例数据 - 更新为本地Sybau生成图片
 const mockImages = [
@@ -151,16 +151,7 @@ export default function ZHGalleryPage() {
             ))}
           </div>
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="搜索Sybau创意内容..."
-                className="pl-10 py-3 text-lg border-2 border-purple-200 focus:border-purple-400 rounded-xl"
-              />
-            </div>
-          </div>
+
         </div>
 
         {/* Categories */}

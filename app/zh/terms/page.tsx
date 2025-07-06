@@ -3,8 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { FileText, Shield, Users, Gavel, AlertTriangle, CheckCircle } from 'lucide-react'
-import Navbar from '@/components/Navbar'
-import Footer from '@/components/Footer'
 
 export default function ZHTermsPage() {
   const termsSections = [
@@ -87,8 +85,6 @@ AI生成内容免责声明：
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
       <div className="container mx-auto px-4 pt-20 pb-12">
         {/* Header */}
         <div className="text-center mb-12">
@@ -169,8 +165,6 @@ AI生成内容免责声明：
           </Card>
         </div>
       </div>
-
-      <Footer />
     </div>
   )
 }

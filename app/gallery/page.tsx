@@ -3,9 +3,9 @@
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
+
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, Search, TrendingUp, Heart, Download, Share2, Eye, Star, Sparkles, Zap, Award, Clock, Rocket, Shield, Users, Check } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Heart, Download, Share2, Eye, Star, Sparkles, Zap, Award, Clock, Rocket, Shield, Users, Check } from 'lucide-react'
 import { usePathname } from 'next/navigation'
 import { generateLocalizedLink } from '@/lib/i18n'
 
@@ -95,7 +95,7 @@ const staticTexts = {
   title: 'Sybau Gallery',
   subtitle: 'Explore Amazing AI-Generated Creative Content',
   description: 'Discover thousands of stunning Sybau creations made by our community with advanced AI technology. Each piece embodies the Gen Z spirit - Stay Young, Beautiful and Unique.',
-  searchPlaceholder: 'Search Sybau styles, categories, or keywords...',
+
   backToHome: 'Back to Home',
   allCategories: 'All Sybau Styles',
   likes: 'likes',
@@ -105,7 +105,7 @@ const staticTexts = {
   ctaTitle: 'Ready to Create Your Own Sybau Content?',
   ctaDescription: 'Join our community of Sybau creators and express your unique style with AI technology',
   startCreating: 'Start Creating Sybau',
-  viewTutorials: 'View Sybau Tutorials',
+
   aboutSybau: 'About Sybau Culture',
   stylesTitle: 'Popular Sybau Styles',
   communityTitle: 'Sybau Community',
@@ -214,14 +214,7 @@ export default function GalleryPage() {
             {getText('description')} Browse through our extensive collection of Sybau masterpieces and get inspired for your next viral creation.
           </p>
 
-          <div className="max-w-xl mx-auto relative mb-6">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <Input
-              type="text"
-              placeholder={getText('searchPlaceholder')}
-              className="pl-12 pr-4 py-4 text-lg bg-white/95 backdrop-blur-sm border-white/20 focus:border-white/40 rounded-xl"
-            />
-          </div>
+
 
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             <Badge className="bg-purple-400 text-white px-4 py-2">
@@ -476,7 +469,7 @@ export default function GalleryPage() {
               {getText('ctaDescription')}
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex justify-center">
               <Link href={generateLocalizedLink('/generator', pathname)}>
                 <Button
                   size="lg"
@@ -484,16 +477,6 @@ export default function GalleryPage() {
                 >
                   <Rocket className="mr-2 h-5 w-5" />
                   {getText('startCreating')}
-                </Button>
-              </Link>
-              <Link href={generateLocalizedLink('/blog', pathname)}>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="border-2 border-white text-white px-8 py-4 text-lg font-semibold rounded-xl"
-                >
-                  <Star className="mr-2 h-5 w-5" />
-                  {getText('viewTutorials')}
                 </Button>
               </Link>
             </div>

@@ -18,7 +18,7 @@ export interface PlanFeatures {
 // 默认套餐配置
 export const DEFAULT_PLANS: Record<PlanType, PlanFeatures> = {
   free: {
-    maxImagesPerMonth: 3,
+    maxImagesPerMonth: 1,
     maxResolution: '1024x1024',
     hasWatermark: true,
     hasPriorityProcessing: false,
