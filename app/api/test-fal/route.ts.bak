@@ -1,18 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as fal from "@fal-ai/serverless-client";
 
-// Configure FAL client
-const FAL_API_KEY = process.env.FAL_KEY || "71163de2-482a-46e5-821c-ccef71f7caae:2cec66a501188bdb77c78e85191693ba";
+// Configure FAL client function
+async function configureFalClient() {
+  const fal = await import("@fal-ai/serverless-client");
+  const FAL_API_KEY = process.env.FAL_KEY || "71163de2-482a-46e5-821c-ccef71f7caae:2cec66a501188bdb77c78e85191693ba";
 
-fal.config({
-  credentials: FAL_API_KEY,
-});
+  fal.config({
+    credentials: FAL_API_KEY,
+  });
+
+  return { fal, FAL_API_KEY };
+}
 
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
     console.log('Testing FAL AI connection...');
+    const { fal, FAL_API_KEY } = await configureFalClient();
     console.log('API Key:', FAL_API_KEY ? `${FAL_API_KEY.substring(0, 10)}...` : 'Not set');
 
     // Test simple image generation

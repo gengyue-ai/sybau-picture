@@ -20,7 +20,7 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: 'Perfect for trying Sybau AI',
     badge: null,
     features: [
-      '3 images per month',
+      '1 image per month',
       'Basic Sybau styles',
       'Standard quality (1024x1024)',
       'Community gallery access'
@@ -44,7 +44,7 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: 'Great for regular creators',
     badge: null,
     features: [
-      '50 images per month',
+      '60 images per month',
       'All Sybau styles',
       'High quality (up to 2048x2048)',
       'No watermarks',
@@ -68,7 +68,7 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: 'For professional creators',
     badge: 'MOST POPULAR',
     features: [
-      '200 images per month',
+      '180 images per month',
       'All premium Sybau styles',
       'Ultra-high quality (up to 4096x4096)',
       'No watermarks',
@@ -87,7 +87,7 @@ const getPricingPlans = (isAnnual: boolean) => [
 const faqs = [
   {
     question: 'How does the image limit work?',
-    answer: 'Each plan includes a specific number of images you can generate. Free users get 3 images per month, Standard users get 50 per month, and PRO users get 200 per month.'
+    answer: 'Each plan includes a specific number of images you can generate. Free users get 1 image per month, Standard users get 60 per month, and PRO users get 180 per month.'
   },
   {
     question: 'Can I upgrade or downgrade my plan?',
@@ -108,7 +108,7 @@ const faqs = [
 ]
 
 export default function PricingPage() {
-  const [isAnnual, setIsAnnual] = useState(true)
+  const [isAnnual, setIsAnnual] = useState(false)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const pricingPlans = getPricingPlans(isAnnual)
   const router = useRouter()

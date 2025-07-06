@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, Download, Wand2, Sparkles, Loader2, AlertCircle, CheckCircle, X, Type, Image as ImageIcon, LogIn, UserPlus, Crown, Star, Lock } from 'lucide-react'
+import { Upload, Download, Wand2, Sparkles, Loader2, AlertCircle, CheckCircle, X, Type, Image as ImageIcon, LogIn, UserPlus, Crown, Star, Lock, User } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
@@ -66,6 +66,44 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   const [usage, setUsage] = useState<{current: number, max: number, remaining: number} | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // 保存用户输入数据到localStorage
+  const saveUserInput = () => {
+    const inputData = {
+      textPrompt,
+      selectedMode,
+      intensity,
+      generationMode,
+      timestamp: Date.now()
+    }
+    localStorage.setItem('sybau_user_input', JSON.stringify(inputData))
+  }
+
+  // 从localStorage恢复用户输入数据
+  const restoreUserInput = () => {
+    try {
+      const savedData = localStorage.getItem('sybau_user_input')
+      if (savedData) {
+        const inputData = JSON.parse(savedData)
+        // 检查数据是否过期（1小时内有效）
+        if (Date.now() - inputData.timestamp < 60 * 60 * 1000) {
+          setTextPrompt(inputData.textPrompt || '')
+          setSelectedMode(inputData.selectedMode || 'classic')
+          setIntensity(inputData.intensity || 3)
+          setGenerationMode(inputData.generationMode || 'text-to-image')
+          // 清除保存的数据
+          localStorage.removeItem('sybau_user_input')
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore user input:', error)
+    }
+  }
+
+  // 在组件加载时恢复用户输入
+  useEffect(() => {
+    restoreUserInput()
+  }, [])
+
   // 清理预览URL以防止内存泄漏
   useEffect(() => {
     return () => {
@@ -94,7 +132,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
     fetchUserPlan()
   }, [session])
 
-  // 根据用户套餐定义可用模式
+  // 根据用户套餐定义可用模式 - 只保留3种基础模式
   const allModes = [
     {
       id: 'classic',
@@ -119,30 +157,6 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
       color: 'from-blue-500 to-cyan-500',
       requiredPlan: 'standard',
       icon: Star
-    },
-    {
-      id: 'creative',
-      name: texts.creativeMode || 'Creative Sybau',
-      description: texts.creativeDescription || 'Artistic interpretation with unique creativity',
-      color: 'from-green-500 to-emerald-500',
-      requiredPlan: 'standard',
-      icon: Star
-    },
-    {
-      id: 'artistic',
-      name: 'Artistic Premium',
-      description: 'High-end artistic interpretation with advanced AI models',
-      color: 'from-purple-600 to-indigo-600',
-      requiredPlan: 'pro',
-      icon: Crown
-    },
-    {
-      id: 'premium',
-      name: 'Premium Ultra',
-      description: 'Ultimate quality with cutting-edge AI technology',
-      color: 'from-amber-500 to-orange-500',
-      requiredPlan: 'pro',
-      icon: Crown
     }
   ]
 
@@ -239,6 +253,14 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
         setError('Please upload an image for image-to-image generation')
         return
       }
+    }
+
+    // 检查用户是否已登录 - 在用户真正要使用功能时才提示
+    if (!session) {
+      // 保存用户输入数据
+      saveUserInput()
+      setError('请先登录账户才能使用AI功能')
+      return
     }
 
     setIsGenerating(true)
@@ -357,66 +379,8 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
     )
   }
 
-  // 如果用户未登录，显示登录提示
-  if (!session) {
-    return (
-      <div className="max-w-4xl mx-auto">
-        <Card className="border-2 border-purple-200 shadow-lg">
-          <CardHeader className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4">
-              <LogIn className="w-8 h-8 text-white" />
-            </div>
-            <CardTitle className="text-2xl bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-              登录后使用AI功能
-            </CardTitle>
-            <CardDescription className="text-lg text-gray-600">
-              请先登录或注册账户，即可使用我们强大的AI图片生成功能
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6">
-              <h3 className="font-semibold text-gray-800 mb-2">✨ 登录后您可以：</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>生成高质量Sybau风格图片</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>保存和管理创作历史</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>使用多种创作模式</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span>享受订阅专属功能</span>
-                </div>
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/auth/signin">
-                <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8">
-                  <LogIn className="w-5 h-5 mr-2" />
-                  立即登录
-                </Button>
-              </Link>
-              <Link href="/auth/signup">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto border-purple-300 text-purple-600 hover:bg-purple-50 px-8">
-                  <UserPlus className="w-5 h-5 mr-2" />
-                  免费注册
-                </Button>
-              </Link>
-            </div>
-            <p className="text-sm text-gray-500">
-              💡 注册完全免费，立即开始您的创意之旅！
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  // 未登录用户显示登录提示，但仍显示完整界面
+  const showLoginPrompt = !session
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
@@ -566,11 +530,45 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
             </>
           )}
 
-          {/* Error Display */}
+          {/* Error Display - 优化的友好提示 */}
           {error && (
-            <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
+            <div className={`p-4 rounded-xl border ${
+              error.includes('请先登录')
+                ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'
+                : 'bg-red-50 border-red-200'
+            }`}>
+              {error.includes('请先登录') ? (
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                      <User className="w-4 h-4 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-800">🎨 开始您的创作之旅！</div>
+                      <div className="text-sm text-gray-600">
+                        您的输入已安全保存，登录后将自动恢复 ✨
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <Link href="/auth/signin" className="flex-1">
+                      <Button size="sm" variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50">
+                        🚀 立即登录
+                      </Button>
+                    </Link>
+                    <Link href="/auth/signup" className="flex-1">
+                      <Button size="sm" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg">
+                        ✨ 免费注册
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center space-x-2 text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  <span className="text-sm">{error}</span>
+                </div>
+              )}
             </div>
           )}
         </CardContent>
@@ -586,8 +584,8 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* User Plan and Usage Info */}
-          {userPlan && usage && (
+          {/* User Plan and Usage Info - 简化显示 */}
+          {session && userPlan && usage && (
             <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
@@ -612,23 +610,20 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                   剩余 {usage.remaining} 张
                 </span>
               </div>
-              {usage.remaining === 0 && (
-                <div className="mt-2 text-xs text-red-600">
-                  ⚠️ 本月额度已用完，请升级套餐或等待下月重置
-                </div>
-              )}
             </div>
           )}
 
-          {/* Mode Selection */}
+          {/* Mode Selection - 简洁的风格选择 */}
           <div>
             <Label className="block text-sm font-medium text-gray-700 mb-3">
               {texts.modeLabel || 'Style Mode'}
             </Label>
             <div className="grid grid-cols-1 gap-2">
-              {/* Available Modes */}
-              {availableModes.map((mode) => {
+              {/* 显示所有模式 */}
+              {allModes.map((mode) => {
                 const Icon = mode.icon
+                const isAvailable = availableModes.includes(mode)
+                const isFree = mode.requiredPlan === 'free'
                 return (
                   <Button
                     key={mode.id}
@@ -636,14 +631,21 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                     className={`p-4 h-auto border-2 transition-all ${
                       selectedMode === mode.id
                         ? `bg-gradient-to-r ${mode.color} text-white border-transparent shadow-lg`
-                        : 'border-cyan-200 bg-white text-gray-700'
+                        : 'border-cyan-200 bg-white text-gray-700 hover:border-cyan-300'
                     }`}
                     onClick={() => setSelectedMode(mode.id)}
                   >
                     <div className="flex items-center space-x-3 w-full">
                       <Icon className="w-5 h-5" />
                       <div className="text-left flex-1">
-                        <div className="text-sm font-medium">{mode.name}</div>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-sm font-medium">{mode.name}</span>
+                          {isFree && (
+                            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
+                              免费
+                            </span>
+                          )}
+                        </div>
                         <div className={`text-xs ${selectedMode === mode.id ? 'text-white/80' : 'text-gray-500'}`}>
                           {mode.description}
                         </div>
@@ -652,53 +654,21 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                   </Button>
                 )
               })}
-
-              {/* Locked Modes */}
-              {lockedModes.map((mode) => {
-                const requiredPlanName = mode.requiredPlan === 'standard' ? 'Standard' : 'Pro'
-                return (
-                  <div
-                    key={mode.id}
-                    className="p-4 border-2 border-gray-200 bg-gray-50 rounded-lg opacity-60"
-                  >
-                    <div className="flex items-center space-x-3 w-full">
-                      <Lock className="w-5 h-5 text-gray-400" />
-                      <div className="text-left flex-1">
-                        <div className="text-sm font-medium text-gray-600">{mode.name}</div>
-                        <div className="text-xs text-gray-500">
-                          需要 {requiredPlanName} 套餐解锁
-                        </div>
-                      </div>
-                      <Link href="/pricing">
-                        <Button size="sm" variant="outline" className="text-xs">
-                          升级
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                )
-              })}
             </div>
           </div>
 
-          {/* Intensity Slider */}
+          {/* Intensity Slider - 移除限制提示 */}
           <div>
             <div className="flex items-center justify-between mb-2">
               <Label className="text-sm font-medium text-gray-700">
                 {texts.intensityLabel || 'Intensity Level'} ({intensity}/5)
               </Label>
-              {(!userPlan || userPlan.name === 'free') && intensity > 3 && (
-                <span className="text-xs text-amber-600 flex items-center">
-                  <Crown className="w-3 h-3 mr-1" />
-                  高强度需要升级
-                </span>
-              )}
             </div>
             <div className="space-y-2">
               <input
                 type="range"
                 min="1"
-                max={(!userPlan || userPlan.name === 'free') ? "3" : userPlan.name === 'standard' ? "4" : "5"}
+                max="5"
                 value={intensity}
                 onChange={(e) => setIntensity(Number(e.target.value))}
                 className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
@@ -710,60 +680,49 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 <span>轻微</span>
                 <span>中等</span>
                 <span>强烈</span>
-                {userPlan?.name === 'standard' && <span className="text-blue-500">很强</span>}
-                {userPlan?.name === 'pro' && (
-                  <>
-                    <span className="text-blue-500">很强</span>
-                    <span className="text-amber-500">极强</span>
-                  </>
-                )}
+                <span>很强</span>
+                <span>极强</span>
               </div>
             </div>
-            {(!userPlan || userPlan.name === 'free') && (
-              <p className="text-xs text-gray-500 mt-1">
-                💡 免费用户限制强度为1-3级，<Link href="/pricing" className="text-purple-600 hover:underline">升级套餐</Link>解锁更高强度
-              </p>
-            )}
           </div>
 
-          {/* Resolution Info */}
-          {userPlan && (
-            <div className="bg-blue-50 p-3 rounded-lg">
-              <div className="flex items-center space-x-2 mb-1">
-                <span className="text-xs font-medium text-blue-700">图片分辨率</span>
-                {userPlan.name === 'pro' && <Crown className="w-3 h-3 text-amber-500" />}
-              </div>
-              <div className="text-xs text-blue-600">
-                {userPlan.name === 'free' && '1024×1024 (标清)'}
-                {userPlan.name === 'standard' && '2048×2048 (高清)'}
-                {userPlan.name === 'pro' && '4096×4096 (超高清)'}
-              </div>
-              {userPlan.hasWatermark && (
-                <div className="text-xs text-gray-500 mt-1">
-                  ⚠️ 免费用户生成的图片将包含水印
-                </div>
-              )}
-            </div>
-          )}
+          {/* Generate Button - 醒目的免费体验按钮 */}
+          <div className="space-y-2">
+            <Button
+              onClick={handleGenerate}
+              disabled={isGenerating}
+              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 text-lg font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-2xl hover:scale-105 transform relative overflow-hidden"
+            >
+              {/* 闪烁效果 */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
 
-          {/* Generate Button */}
-          <Button
-            onClick={handleGenerate}
-            disabled={isGenerating || !canGenerate}
-            className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 text-lg font-semibold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                {texts.generating}
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-5 h-5 mr-2" />
-                {texts.generateButton}
-              </>
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-6 h-6 mr-2 animate-spin" />
+                  {texts.generating}
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-6 h-6 mr-2 animate-bounce" />
+                  {session ? texts.generateButton : '🎨 免费体验AI创作'}
+                </>
+              )}
+            </Button>
+
+            {/* 未登录用户的引导提示 */}
+            {!session && (
+              <div className="text-center space-y-1">
+                <div className="flex items-center justify-center space-x-1 text-sm text-purple-600">
+                  <Sparkles className="w-4 h-4" />
+                  <span className="font-medium">每月1张免费图片</span>
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <p className="text-xs text-gray-500">
+                  体验后可升级获得更多功能
+                </p>
+              </div>
             )}
-          </Button>
+          </div>
 
           {/* Generated Image Display */}
           {generatedImage && (

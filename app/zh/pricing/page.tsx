@@ -18,7 +18,7 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: '完美的Sybau AI体验入门',
     badge: null,
     features: [
-      '每月3张图片',
+      '每月1张图片',
       '基础Sybau风格',
       '标准质量 (1024x1024)',
       '社区画廊访问'
@@ -42,7 +42,7 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: '适合日常创作者',
     badge: null,
     features: [
-      '每月50张图片',
+      '每月60张图片',
       '所有Sybau风格',
       '高质量 (最高2048x2048)',
       '无水印',
@@ -66,7 +66,7 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: '专业创作者的选择',
     badge: '最受欢迎',
     features: [
-      '每月200张图片',
+      '每月180张图片',
       '所有高级Sybau风格',
       '超高质量 (最高4096x4096)',
       '无水印',
@@ -85,7 +85,7 @@ const getPricingPlans = (isAnnual: boolean) => [
 const faqs = [
   {
     question: '图片限制如何工作？',
-    answer: '每个套餐包含特定数量的图片生成额度。免费用户每月可生成3张图片，标准版用户每月50张，专业版用户每月200张。'
+    answer: '每个套餐包含特定数量的图片生成额度。免费用户每月可生成1张图片，标准版用户每月60张，专业版用户每月180张。'
   },
   {
     question: '可以随时升级或降级套餐吗？',
@@ -106,7 +106,7 @@ const faqs = [
 ]
 
 export default function ZHPricingPage() {
-  const [isAnnual, setIsAnnual] = useState(true)
+  const [isAnnual, setIsAnnual] = useState(false)
   const pricingPlans = getPricingPlans(isAnnual)
   const router = useRouter()
 

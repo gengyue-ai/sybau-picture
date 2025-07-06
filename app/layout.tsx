@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google'
 import { Toaster } from '@/components/ui/toaster'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import { Providers } from '@/components/providers'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -73,14 +74,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen flex flex-col">
-          <Navbar />
-          <main className="flex-1 pt-16">
-            {children}
-          </main>
-          <Footer />
-        </div>
-        <Toaster />
+        <Providers>
+          <div className="min-h-screen flex flex-col">
+            <Navbar />
+            <main className="flex-1 pt-16">
+              {children}
+            </main>
+            <Footer />
+          </div>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )

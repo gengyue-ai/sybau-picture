@@ -27,7 +27,7 @@ export const DEFAULT_PLANS: Record<PlanType, PlanFeatures> = {
     availableStyles: ['classic']
   },
   standard: {
-    maxImagesPerMonth: 50,
+    maxImagesPerMonth: 60,
     maxResolution: '2048x2048',
     hasWatermark: false,
     hasPriorityProcessing: false,
@@ -36,7 +36,7 @@ export const DEFAULT_PLANS: Record<PlanType, PlanFeatures> = {
     availableStyles: ['classic', 'exaggerated', 'minimal', 'professional']
   },
   pro: {
-    maxImagesPerMonth: 200,
+    maxImagesPerMonth: 180,
     maxResolution: '4096x4096',
     hasWatermark: false,
     hasPriorityProcessing: true,
