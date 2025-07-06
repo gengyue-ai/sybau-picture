@@ -87,7 +87,8 @@ export default function ZhSignInPage() {
       if (result?.error) {
         setError(t.errors.signInFailed)
       } else {
-        router.push('/zh')
+        // 强制刷新会话状态
+        window.location.href = '/zh'
       }
     } catch (error) {
       console.error('Sign in error:', error)

@@ -173,7 +173,11 @@ export default function Navbar() {
             </div>
 
             {/* User Actions */}
-            {session.data ? (
+            {session.status === 'loading' ? (
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+              </div>
+            ) : session.status === 'authenticated' && session.data ? (
               <>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -293,7 +297,12 @@ export default function Navbar() {
 
                   {/* Mobile Footer */}
                   <div className="border-t border-gray-200 pt-4">
-                    {session.data ? (
+                    {session.status === 'loading' ? (
+                      <div className="space-y-3">
+                        <div className="w-full h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+                        <div className="w-full h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+                      </div>
+                    ) : session.status === 'authenticated' && session.data ? (
                       <div className="space-y-3">
                         <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl">
                           <User className="w-8 h-8 text-purple-600" />
