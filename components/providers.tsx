@@ -9,7 +9,10 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <SessionProvider>
+    <SessionProvider
+      refetchInterval={5 * 60} // 5分钟重新获取会话
+      refetchOnWindowFocus={true} // 窗口获得焦点时重新获取
+    >
       {children}
     </SessionProvider>
   )

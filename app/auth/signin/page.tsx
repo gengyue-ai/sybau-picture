@@ -84,12 +84,11 @@ export default function SignInPage() {
       if (result?.error) {
         setError(t.invalidCredentials)
       } else {
-        // 获取最新的session
-        const session = await getSession()
-        if (session) {
+        // 等待会话状态更新，然后跳转
+        setTimeout(() => {
           router.push('/')
-          router.refresh()
-        }
+          router.refresh() // 强制刷新页面状态
+        }, 100)
       }
     } catch (error) {
       setError(t.somethingWentWrong)

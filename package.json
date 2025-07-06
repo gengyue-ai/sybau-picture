@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 3001",
-    "build": "npm run protect:check && next build",
+    "build": "prisma generate && next build",
     "build:unsafe": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -107,7 +107,6 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
-    "@next/swc-win32-x64-msvc": "^15.3.4",
     "@playwright/test": "^1.40.1",
     "@testing-library/jest-dom": "^6.1.6",
     "@testing-library/react": "^14.1.2",

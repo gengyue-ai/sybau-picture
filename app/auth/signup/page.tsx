@@ -200,7 +200,11 @@ export default function SignUpPage() {
       if (result?.error) {
         setError('Account created but failed to sign in. Please try signing in manually.')
       } else {
-        router.push('/generator')
+        // 等待会话状态更新
+        setTimeout(() => {
+          router.push('/')
+          router.refresh() // 强制刷新页面状态
+        }, 100)
       }
     } catch (error) {
       setError(error instanceof Error ? error.message : t.errors.signUpFailed)
