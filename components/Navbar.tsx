@@ -1,380 +1,341 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Button } from '@/components/ui/button'
-
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Menu, Sparkles, Image, ChevronDown, Star, User, LogOut, Settings, Rocket, Heart, Globe } from 'lucide-react'
-import LanguageSwitcher from '@/components/LanguageSwitcher'
-import { useTranslation } from '@/hooks/useTranslation'
-import { generateLocalizedLink } from '@/lib/i18n'
 import { useSession, signOut } from 'next-auth/react'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Badge } from '@/components/ui/badge'
+import { Menu, X, User, LogOut, Settings, CreditCard, History, Sparkles, UserCircle } from 'lucide-react'
+import { useRouter, usePathname } from 'next/navigation'
 
-const NAVIGATION_ITEMS = [
-  {
-    name: 'nav.gallery',
-    href: '/gallery',
-    icon: Image,
-    description: 'Art Gallery',
-    fallback: 'Gallery'
+const texts = {
+  en: {
+    home: 'Home',
+    gallery: 'Gallery',
+    pricing: 'Pricing',
+    help: 'Help',
+    signIn: 'Sign In',
+    signOut: 'Sign Out',
+    profile: 'Profile',
+    settings: 'Settings',
+    billing: 'Billing',
+    history: 'History',
+    support: 'Support',
+    menu: 'Menu',
+    close: 'Close',
+    account: 'Account',
+    signingOut: 'Signing out...',
+    freeUser: 'Free User',
+    proUser: 'Pro User',
+    premiumUser: 'Premium User'
   },
-  {
-    name: 'nav.pricing',
-    href: '/pricing',
-    icon: Star,
-    description: 'Pricing Plans',
-    fallback: 'Pricing'
+  zh: {
+    home: '首页',
+    gallery: '画廊',
+    pricing: '定价',
+    help: '帮助',
+    signIn: '登录',
+    signOut: '登出',
+    profile: '个人资料',
+    settings: '设置',
+    billing: '账单',
+    history: '历史记录',
+    support: '支持',
+    menu: '菜单',
+    close: '关闭',
+    account: '账户',
+    signingOut: '登出中...',
+    freeUser: '免费用户',
+    proUser: '专业用户',
+    premiumUser: '高级用户'
   }
-]
+}
+
+// 获取用户名首字母
+const getUserInitials = (name: string | null | undefined, email: string): string => {
+  if (name && name.trim()) {
+    return name.trim().split(' ').map(word => word[0]).join('').toUpperCase().slice(0, 2)
+  }
+  return email.charAt(0).toUpperCase()
+}
+
+// 获取用户计划标签
+const getPlanBadge = (planName: string | null | undefined, language: 'en' | 'zh') => {
+  const t = texts[language]
+  switch (planName?.toLowerCase()) {
+    case 'pro':
+      return { label: t.proUser, variant: 'default' as const }
+    case 'premium':
+      return { label: t.premiumUser, variant: 'default' as const }
+    default:
+      return { label: t.freeUser, variant: 'secondary' as const }
+  }
+}
 
 export default function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isSigningOut, setIsSigningOut] = useState(false)
+  const { data: session, status } = useSession()
+  const router = useRouter()
   const pathname = usePathname()
-  const { t, isLoading } = useTranslation('/')
-  const session = useSession()
 
-  // 静态文本备用选项，确保即使翻译失败也能显示
-  const staticTexts = {
-    'nav.home': 'Home',
-    'nav.generator': 'Generator',
-    'nav.gallery': 'Gallery',
-    'nav.pricing': 'Pricing',
-    'nav.blog': 'Blog',
-    'nav.about': 'About',
-    'nav.tryFree': 'Try Free',
-    'nav.language': 'Language',
-    'nav.createNow': 'Create Now',
-    'nav.create': 'Create',
-    'nav.stats': 'Platform Stats',
-    'nav.creations': 'Creations',
-    'nav.rating': 'Rating',
-    'nav.startCreating': 'Start Creating',
-    'nav.followUs': 'Follow Us',
-    'nav.helpCenter': 'Help Center'
-  }
+  const currentLang = pathname.startsWith('/zh') ? 'zh' : 'en'
+  const t = texts[currentLang]
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10)
-    }
-
-    window.addEventListener('scroll', handleScroll)
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
-
-  // 设置最大loading时间为100ms，防止永久loading
-  useEffect(() => {
-    const maxLoadingTimer = setTimeout(() => {
-      // 强制结束loading
-    }, 100) // 100ms后强制结束loading
-
-    return () => clearTimeout(maxLoadingTimer)
-  }, [isLoading])
-
-  const isActive = (href: string) => {
-    if (href === '/') {
-      return pathname === '/' || pathname.startsWith('/zh') || pathname.startsWith('/es') ||
-             pathname.startsWith('/ja') || pathname.startsWith('/ko') || pathname.startsWith('/fr') ||
-             pathname.startsWith('/de') || pathname.startsWith('/pt') || pathname.startsWith('/ru') ||
-             pathname.startsWith('/ar')
-    }
-    return pathname.startsWith(href)
-  }
-
-  // 创建一个安全的翻译函数，总是返回有效的文本
-  const getText = (key: string, fallback?: string) => {
+  const handleSignOut = async () => {
+    setIsSigningOut(true)
     try {
-      // 总是尝试获取翻译，如果失败则使用静态文本或fallback
-      const translation = t(key, fallback || staticTexts[key as keyof typeof staticTexts])
-
-      // 检查翻译结果是否包含乱码或无效字符
-      if (translation && typeof translation === 'string' && translation.length > 0) {
-        // 简单的乱码检测：检查是否包含过多的特殊字符
-        const specialCharCount = (translation.match(/[^\w\s\u4e00-\u9fff\u0100-\u017f\u00c0-\u00ff]/g) || []).length
-        if (specialCharCount / translation.length < 0.3) {
-          return translation
-        }
-      }
-
-      // 如果翻译失败或包含乱码，使用fallback或静态文本
-      return fallback || staticTexts[key as keyof typeof staticTexts] || key
+      await signOut({
+        redirect: false,
+        callbackUrl: '/'
+      })
+      router.push('/')
+      router.refresh()
     } catch (error) {
-      console.warn(`Translation error for key "${key}":`, error)
-      return fallback || staticTexts[key as keyof typeof staticTexts] || key
+      console.error('登出错误:', error)
+    } finally {
+      setIsSigningOut(false)
     }
   }
+
+  const handleLanguageToggle = () => {
+    console.log('语言切换被点击，当前路径:', pathname)
+    const newLang = currentLang === 'zh' ? 'en' : 'zh'
+
+    // 更精确的路径处理
+    let currentPath = pathname
+    if (currentPath.startsWith('/zh/')) {
+      currentPath = currentPath.substring(3) // 移除 '/zh'
+    } else if (currentPath === '/zh') {
+      currentPath = '/'
+    }
+
+    // 生成新路径
+    let newPath
+    if (newLang === 'zh') {
+      newPath = currentPath === '/' ? '/zh' : `/zh${currentPath}`
+    } else {
+      newPath = currentPath === '/' ? '/' : currentPath
+    }
+
+    console.log('新语言:', newLang, '新路径:', newPath)
+    router.push(newPath)
+  }
+
+  const getNavLink = (path: string) => {
+    return currentLang === 'zh' ? `/zh${path}` : path
+  }
+
+  const navItems = [
+    { href: getNavLink('/'), label: t.home },
+    { href: getNavLink('/gallery'), label: t.gallery },
+    { href: getNavLink('/pricing'), label: t.pricing },
+    { href: getNavLink('/help'), label: t.help },
+  ]
 
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled
-          ? 'bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200'
-          : 'bg-white/80 backdrop-blur-sm'
-      }`}
-    >
+    <nav className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href={generateLocalizedLink('/', pathname)} className="flex items-center space-x-3 group">
-            <div className="relative">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg group- transition-all duration-200 group-">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">S</span>
-              </div>
+          <Link href={getNavLink('/')} className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+              <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <div className="hidden sm:block">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                Sybau Picture
-              </h1>
-              <p className="text-xs text-gray-500 leading-none">AI Meme Generator</p>
-            </div>
+            <span className="text-xl font-bold text-gray-900">Sybau Picture</span>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center space-x-1">
-            {NAVIGATION_ITEMS.map((item) => {
-              const Icon = item.icon
-              const active = isActive(item.href)
-              const localizedHref = generateLocalizedLink(item.href, pathname)
-
-              return (
-                <Link key={item.href} href={localizedHref}>
-                  <Button
-                    variant="ghost"
-                    className={`relative px-6 py-3 h-auto flex items-center space-x-3 transition-all duration-200 rounded-xl ${
-                      active
-                        ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 shadow-sm'
-                        : 'text-gray-600 hover:text-purple-700 hover:bg-purple-50'
-                    }`}
-                  >
-                    <Icon className="w-6 h-6" />
-                    <span className="font-semibold text-lg">{getText(item.name, item.fallback)}</span>
-                    {active && (
-                      <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full"></div>
-                    )}
-                  </Button>
-                </Link>
-              )
-            })}
+          <div className="hidden md:flex items-center space-x-8">
+            {navItems.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="text-base text-gray-600 hover:text-gray-900 transition-colors font-medium"
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
 
-          {/* Right Side Actions */}
-          <div className="flex items-center space-x-3">
-            {/* Language Switcher */}
-            <div className="hidden md:block">
-              <LanguageSwitcher variant="ghost" size="sm" />
-            </div>
+          {/* User Actions */}
+          <div className="flex items-center space-x-4">
+            {/* Language Toggle */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLanguageToggle}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              {currentLang === 'zh' ? 'EN' : '中文'}
+            </Button>
 
-            {/* User Actions */}
-            {session.status === 'loading' ? (
-              <div className="hidden md:flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-              </div>
-            ) : session.status === 'authenticated' && session.data ? (
-              <>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="hidden md:flex">
-                      <User className="w-4 h-4 mr-2" />
-                      {session.data.user?.name || session.data.user?.email}
-                      <ChevronDown className="w-4 h-4 ml-1" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem asChild>
-                      <Link href="/history">
-                        <Settings className="w-4 h-4 mr-2" />
-                        {getText('nav.history', 'History')}
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => signOut()}>
-                      <LogOut className="w-4 h-4 mr-2" />
-                      {getText('nav.logout', 'Logout')}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </>
+            {/* User Authentication */}
+            {status === 'loading' ? (
+              <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse" />
+            ) : session?.user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    {session.user.image ? (
+                      <img
+                        src={session.user.image}
+                        alt={session.user.name || session.user.email || 'User'}
+                        className="h-10 w-10 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
+                        {getUserInitials(session.user.name, session.user.email || '')}
+                      </div>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-72" align="end" forceMount>
+                  {/* User Info */}
+                  <div className="flex items-center space-x-3 p-3">
+                    {session.user.image ? (
+                      <img
+                        src={session.user.image}
+                        alt={session.user.name || session.user.email || 'User'}
+                        className="h-12 w-12 rounded-full object-cover"
+                      />
+                    ) : (
+                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium text-lg">
+                        {getUserInitials(session.user.name, session.user.email || '')}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {session.user.name || session.user.email?.split('@')[0]}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {session.user.email}
+                      </p>
+                      <div className="mt-1">
+                        <Badge
+                          variant={getPlanBadge((session.user as any)?.planName, currentLang).variant}
+                          className="text-xs"
+                        >
+                          {getPlanBadge((session.user as any)?.planName, currentLang).label}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Account Actions */}
+                  <DropdownMenuItem asChild>
+                    <Link href={getNavLink('/profile')} className="flex items-center">
+                      <User className="mr-2 h-4 w-4" />
+                      {t.profile}
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link href={getNavLink('/history')} className="flex items-center">
+                      <History className="mr-2 h-4 w-4" />
+                      {t.history}
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link href={getNavLink('/pricing')} className="flex items-center">
+                      <CreditCard className="mr-2 h-4 w-4" />
+                      {t.billing}
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuItem asChild>
+                    <Link href={getNavLink('/support')} className="flex items-center">
+                      <Settings className="mr-2 h-4 w-4" />
+                      {t.support}
+                    </Link>
+                  </DropdownMenuItem>
+
+                  <DropdownMenuSeparator />
+
+                  {/* Sign Out */}
+                  <DropdownMenuItem
+                    onClick={handleSignOut}
+                    disabled={isSigningOut}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    {isSigningOut ? t.signingOut : t.signOut}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <div className="hidden md:flex items-center space-x-2">
-                <Link href="/auth/signin">
-                  <Button variant="outline" size="sm">
-                    {getText('nav.signin', 'Sign In')}
-                  </Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button size="sm" className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                    {getText('nav.signup', 'Sign Up')}
-                  </Button>
-                </Link>
-              </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => {
+                  console.log('登录按钮被点击')
+                  const targetPath = getNavLink('/auth/signin')
+                  console.log('跳转目标:', targetPath)
+                  router.push(targetPath)
+                }}
+                className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0 flex items-center space-x-2"
+              >
+                <UserCircle className="h-4 w-4" />
+                <span>{t.signIn}</span>
+              </Button>
             )}
 
-            {/* Mobile Menu */}
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden p-2">
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-80 bg-white">
-                <div className="flex flex-col h-full">
-                  {/* Mobile Header */}
-                  <div className="flex items-center justify-between py-4 border-b border-gray-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                        <Sparkles className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <h2 className="font-bold text-gray-800">Sybau Picture</h2>
-                        <p className="text-xs text-gray-500">AI Meme Generator</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mobile Navigation */}
-                  <div className="flex-1 py-6">
-                    <div className="space-y-2">
-                      {NAVIGATION_ITEMS.map((item) => {
-                        const Icon = item.icon
-                        const active = isActive(item.href)
-                        const localizedHref = generateLocalizedLink(item.href, pathname)
-
-                        return (
-                          <Link
-                            key={item.href}
-                            href={localizedHref}
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <div className={`flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-                              active
-                                ? 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700'
-                                : 'text-gray-600 hover:bg-gray-50'
-                            }`}>
-                              <Icon className="w-5 h-5" />
-                              <div>
-                                <div className="font-medium">{getText(item.name, item.fallback)}</div>
-                                <div className="text-xs text-gray-500">{item.description}</div>
-                              </div>
-                              {active && (
-                                <Star className="w-4 h-4 text-purple-600 ml-auto" />
-                              )}
-                            </div>
-                          </Link>
-                        )
-                      })}
-                    </div>
-
-                    {/* Mobile Language Switcher */}
-                    <div className="mt-6 px-4">
-                      <div className="text-sm font-medium text-gray-700 mb-3">{getText('nav.language')}</div>
-                      <LanguageSwitcher variant="outline" size="sm" />
-                    </div>
-
-                    {/* Mobile Stats */}
-                    <div className="mt-6 px-4">
-                      <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
-                        <div className="text-sm font-medium text-gray-700 mb-3">{getText('nav.stats')}</div>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-purple-600">125万+</div>
-                            <div className="text-xs text-gray-500">{getText('nav.creations')}</div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-2xl font-bold text-pink-600">4.9⭐</div>
-                            <div className="text-xs text-gray-500">{getText('nav.rating')}</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Mobile Footer */}
-                  <div className="border-t border-gray-200 pt-4">
-                    {session.status === 'loading' ? (
-                      <div className="space-y-3">
-                        <div className="w-full h-12 bg-gray-200 rounded-xl animate-pulse"></div>
-                        <div className="w-full h-10 bg-gray-200 rounded-xl animate-pulse"></div>
-                      </div>
-                    ) : session.status === 'authenticated' && session.data ? (
-                      <div className="space-y-3">
-                        <div className="flex items-center space-x-3 px-4 py-3 bg-gray-50 rounded-xl">
-                          <User className="w-8 h-8 text-purple-600" />
-                          <div>
-                            <div className="font-medium text-gray-800">
-                              {session.data.user?.name || session.data.user?.email}
-                            </div>
-                            <div className="text-sm text-gray-500">已登录</div>
-                          </div>
-                        </div>
-                        <Link href="/history" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full mb-2">
-                            <Settings className="w-4 h-4 mr-2" />
-                            {getText('nav.history', 'History')}
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          className="w-full mb-3"
-                          onClick={() => {
-                            signOut()
-                            setIsMobileMenuOpen(false)
-                          }}
-                        >
-                          <LogOut className="w-4 h-4 mr-2" />
-                          {getText('nav.logout', 'Logout')}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <Link href="/auth/signin" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Button variant="outline" className="w-full">
-                            {getText('nav.signin', 'Sign In')}
-                          </Button>
-                        </Link>
-                        <Link href="/auth/signup" onClick={() => setIsMobileMenuOpen(false)}>
-                          <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white">
-                            {getText('nav.signup', 'Sign Up')}
-                          </Button>
-                        </Link>
-                      </div>
-                    )}
-
-                    <Link href={generateLocalizedLink('/', pathname)} onClick={() => setIsMobileMenuOpen(false)}>
-                      <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 rounded-xl shadow-lg mt-4">
-                        <Rocket className="w-4 h-4 mr-2" />
-                        {getText('nav.startCreating')}
-                      </Button>
-                    </Link>
-
-                    <div className="flex items-center justify-center space-x-6 mt-4 text-gray-500">
-                      <a href="#" className="flex items-center space-x-1 text-sm transition-colors">
-                        <Heart className="w-4 h-4" />
-                        <span>{getText('nav.followUs')}</span>
-                      </a>
-                      <a href="#" className="flex items-center space-x-1 text-sm transition-colors">
-                        <Globe className="w-4 h-4" />
-                        <span>{getText('nav.helpCenter')}</span>
-                      </a>
-                    </div>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
+            {/* Mobile Menu Button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+            >
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
-      </div>
 
-      {/* Progress Bar */}
-      {isScrolled && (
-        <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-purple-600 via-pink-600 to-cyan-600"></div>
-      )}
+        {/* Mobile Navigation */}
+        {isMenuOpen && (
+          <div className="md:hidden border-t bg-white/95 backdrop-blur-sm">
+            <div className="px-2 pt-2 pb-3 space-y-1">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="block px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {item.label}
+                </Link>
+              ))}
+
+              {/* Mobile Auth */}
+              {!session?.user && (
+                <div className="border-t pt-2 mt-2">
+                  <Link
+                    href={getNavLink('/auth/signin')}
+                    className="block px-3 py-2 text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-md transition-colors font-medium text-center"
+                    onClick={() => {
+                      console.log('移动端登录链接被点击')
+                      setIsMenuOpen(false)
+                    }}
+                  >
+                    {t.signIn}
+                  </Link>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   )
 }

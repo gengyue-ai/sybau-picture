@@ -122,7 +122,7 @@ const nextConfig = {
       }
     ]
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dev }) => {
     // 优化构建
     if (!isServer) {
       config.resolve.fallback = {
@@ -130,6 +130,12 @@ const nextConfig = {
         fs: false,
       }
     }
+
+    // 在开发环境中禁用CSS source map以避免控制台警告
+    if (dev) {
+      config.devtool = 'eval-source-map'
+    }
+
     return config
   },
   env: {

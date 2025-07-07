@@ -18,13 +18,13 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: '完美的Sybau AI体验入门',
     badge: null,
     features: [
-      '每月1张图片',
+      '免费创作体验',
       '基础Sybau风格',
       '标准质量 (1024x1024)',
       '社区画廊访问'
     ],
     limitations: [
-      '每月使用限制',
+      '基础使用配额',
       '带水印图片'
     ],
     buttonText: '免费开始',
@@ -71,8 +71,7 @@ const getPricingPlans = (isAnnual: boolean) => [
       '超高质量 (最高4096x4096)',
       '无水印',
       '优先处理',
-      '高级AI功能',
-      '批量处理'
+      '高级AI功能'
     ],
     limitations: [],
     buttonText: '升级专业版',
@@ -85,7 +84,7 @@ const getPricingPlans = (isAnnual: boolean) => [
 const faqs = [
   {
     question: '图片限制如何工作？',
-    answer: '每个套餐包含特定数量的图片生成额度。免费用户每月可生成1张图片，标准版用户每月60张，专业版用户每月180张。'
+    answer: '每个套餐包含特定数量的图片生成额度。免费用户享有基础体验配额，标准版用户每月60张，专业版用户每月180张。'
   },
   {
     question: '可以随时升级或降级套餐吗？',
@@ -93,7 +92,7 @@ const faqs = [
   },
   {
     question: '如果超过图片限制会怎样？',
-    answer: '如果超过每月限制，您可以升级套餐或等待下一个计费周期。免费用户可以升级以继续创作。'
+    answer: '如果达到每月限制，您可以升级套餐来继续创作精彩内容。免费用户可以升级以解锁更多功能和更高配额。'
   },
   {
     question: '有隐藏费用吗？',
@@ -115,8 +114,8 @@ export default function ZHPricingPage() {
       // 免费版直接跳转到中文主页使用生成器
       router.push('/zh')
     } else {
-      // 付费版跳转到注册页面
-      router.push('/auth/signup')
+      // 付费版跳转到中文登录页面（包含注册功能）
+      router.push('/zh/auth/signin?callbackUrl=/zh/pricing')
     }
   }
 
@@ -263,9 +262,9 @@ export default function ZHPricingPage() {
                 <tbody className="divide-y divide-gray-200">
                   <tr>
                     <td className="px-6 py-4 text-sm text-gray-900">每月图片数</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">3张</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">50张</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">200张</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">体验配额</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">60张</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">180张</td>
                   </tr>
                   <tr className="bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">最大分辨率</td>
@@ -291,12 +290,7 @@ export default function ZHPricingPage() {
                     <td className="px-6 py-4 text-center"><X className="w-4 h-4 text-red-500 mx-auto" /></td>
                     <td className="px-6 py-4 text-center"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
                   </tr>
-                  <tr className="bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">批量处理</td>
-                    <td className="px-6 py-4 text-center"><X className="w-4 h-4 text-red-500 mx-auto" /></td>
-                    <td className="px-6 py-4 text-center"><X className="w-4 h-4 text-red-500 mx-auto" /></td>
-                    <td className="px-6 py-4 text-center"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>

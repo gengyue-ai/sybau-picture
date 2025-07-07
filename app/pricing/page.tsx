@@ -20,13 +20,13 @@ const getPricingPlans = (isAnnual: boolean) => [
     description: 'Perfect for trying Sybau AI',
     badge: null,
     features: [
-      '1 image per month',
+      'Free trial experience',
       'Basic Sybau styles',
       'Standard quality (1024x1024)',
       'Community gallery access'
     ],
     limitations: [
-      'Monthly usage limit',
+      'Basic usage quota',
       'Watermarked images'
     ],
     buttonText: 'Get Started Free',
@@ -73,8 +73,7 @@ const getPricingPlans = (isAnnual: boolean) => [
       'Ultra-high quality (up to 4096x4096)',
       'No watermarks',
       'Priority processing',
-      'Advanced AI features',
-      'Batch processing'
+      'Advanced AI features'
     ],
     limitations: [],
     buttonText: 'Go PRO',
@@ -87,7 +86,7 @@ const getPricingPlans = (isAnnual: boolean) => [
 const faqs = [
   {
     question: 'How does the image limit work?',
-    answer: 'Each plan includes a specific number of images you can generate. Free users get 1 image per month, Standard users get 60 per month, and PRO users get 180 per month.'
+    answer: 'Each plan includes a specific number of images you can generate. Free users get a basic trial quota, Standard users get 60 per month, and PRO users get 180 per month.'
   },
   {
     question: 'Can I upgrade or downgrade my plan?',
@@ -95,7 +94,7 @@ const faqs = [
   },
   {
     question: 'What happens if I exceed my image limit?',
-    answer: 'If you exceed your monthly limit, you can either upgrade your plan or wait until the next billing cycle. Free users can upgrade to continue creating.'
+    answer: 'If you reach your monthly limit, you can upgrade your plan to continue creating amazing content. Free users can upgrade to unlock more features and higher quotas.'
   },
   {
     question: 'Are there any hidden fees?',
@@ -316,15 +315,15 @@ export default function PricingPage() {
                     <th className="px-6 py-4 text-left text-sm font-medium text-gray-500">Feature</th>
                     <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Free</th>
                     <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Standard</th>
-                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">PRO</th>
+                    <th className="px-6 py-4 text-center text-sm font-medium text-gray-500">Professional</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   <tr>
                     <td className="px-6 py-4 text-sm text-gray-900">Monthly Images</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">3</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">50</td>
-                    <td className="px-6 py-4 text-center text-sm text-gray-600">200</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">Basic quota</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">60</td>
+                    <td className="px-6 py-4 text-center text-sm text-gray-600">180</td>
                   </tr>
                   <tr className="bg-gray-50">
                     <td className="px-6 py-4 text-sm text-gray-900">Max Resolution</td>
@@ -350,12 +349,7 @@ export default function PricingPage() {
                     <td className="px-6 py-4 text-center"><X className="w-4 h-4 text-red-500 mx-auto" /></td>
                     <td className="px-6 py-4 text-center"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
                   </tr>
-                  <tr className="bg-gray-50">
-                    <td className="px-6 py-4 text-sm text-gray-900">Batch Processing</td>
-                    <td className="px-6 py-4 text-center"><X className="w-4 h-4 text-red-500 mx-auto" /></td>
-                    <td className="px-6 py-4 text-center"><X className="w-4 h-4 text-red-500 mx-auto" /></td>
-                    <td className="px-6 py-4 text-center"><Check className="w-4 h-4 text-green-500 mx-auto" /></td>
-                  </tr>
+
                 </tbody>
               </table>
             </div>

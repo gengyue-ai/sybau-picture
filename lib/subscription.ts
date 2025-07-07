@@ -15,12 +15,12 @@ export interface PlanFeatures {
   availableStyles: string[]
 }
 
-// 默认套餐配置
+// 默认套餐配置（按用户要求修改）
 export const DEFAULT_PLANS: Record<PlanType, PlanFeatures> = {
   free: {
     maxImagesPerMonth: 1,
     maxResolution: '1024x1024',
-    hasWatermark: true,
+    hasWatermark: false,
     hasPriorityProcessing: false,
     hasBatchProcessing: false,
     hasAdvancedFeatures: false,
@@ -40,7 +40,7 @@ export const DEFAULT_PLANS: Record<PlanType, PlanFeatures> = {
     maxResolution: '4096x4096',
     hasWatermark: false,
     hasPriorityProcessing: true,
-    hasBatchProcessing: true,
+    hasBatchProcessing: false,
     hasAdvancedFeatures: true,
     availableStyles: ['classic', 'exaggerated', 'minimal', 'professional', 'artistic', 'premium']
   }

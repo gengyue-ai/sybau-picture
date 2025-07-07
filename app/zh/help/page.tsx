@@ -58,7 +58,7 @@ export default function ZHHelpPage() {
       id: 'free-usage',
       category: 'account',
       question: '免费用户有什么限制？',
-      answer: '免费用户每月可以生成3张图片。标准版用户每月可生成50张，专业版用户每月可生成200张图片，享受优先处理队列。'
+      answer: '免费用户享有基础体验配额。标准版用户每月可生成60张，专业版用户每月可生成180张图片，享受优先处理队列。'
     },
     {
       id: 'style-options',
@@ -78,11 +78,11 @@ export default function ZHHelpPage() {
       question: '可以商业使用生成的图片吗？',
       answer: '是的！您拥有生成图片的完整使用权，可以用于个人和商业目的。但请确保上传的原始图片没有版权问题。'
     },
-    {
-      id: 'api-access',
+        {
+      id: 'advanced-features',
       category: 'technical',
-      question: '是否提供API接口？',
-      answer: '目前我们暂不提供API接口。我们专注于为用户提供完善的网页端服务体验。如果您需要批量处理，建议使用我们的网页版工具。'
+      question: '专业版有哪些高级功能？',
+      answer: '专业版用户享有优先处理队列、更高的图片质量上限、所有高级Sybau风格，以及专属的高级AI功能。'
     }
   ]
 

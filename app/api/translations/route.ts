@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getTranslation, getAllTranslations, isValidLanguage } from '@/lib/i18n'
+import { getTranslation, getAllTranslations } from '@/lib/i18n-server'
+import { isValidLanguage } from '@/lib/i18n'
 
 // Force dynamic rendering to avoid static generation issues
 export const dynamic = 'force-dynamic'
@@ -37,7 +38,7 @@ export async function GET(request: NextRequest) {
 
     // 获取单个页面的翻译
     const translation = await getTranslation(pagePath, langCode)
-    
+
     // 如果没有找到翻译，返回空对象而不是错误
     // 这样客户端可以使用fallback值
     return NextResponse.json({
@@ -54,4 +55,4 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
-} 
+}

@@ -1,5 +1,3 @@
-import { prisma } from '@/lib/prisma'
-
 export const SUPPORTED_LANGUAGES = [
   { code: 'en', name: 'English', native: 'English' },
   { code: 'zh', name: 'Chinese', native: '中文' },
@@ -26,7 +24,7 @@ export const fallbackTranslations = {
           title: 'Create Viral',
           subtitle: 'Sybau Memes',
           tagline: 'in Seconds',
-          description: 'Transform any photo into hilarious Sybau Lazer Dim 700 style memes with our AI technology. No design skills required - just upload and watch the magic happen!'
+          description: 'Transform any photo into hilarious Sybau style memes with our AI technology. No design skills required - just upload and watch the magic happen!'
         },
         benefits: {
           free: '100% Free',
@@ -117,9 +115,9 @@ export const fallbackTranslations = {
         }
       },
       whatIs: {
-        title: 'What is Sybau Lazer Dim 700?',
+        title: 'What is Sybau Style?',
         description: 'A unique AI art style that creates viral meme content',
-        content: 'Sybau Lazer Dim 700 is a cutting-edge AI art style specifically designed for creating viral meme content. This innovative approach combines advanced machine learning with internet culture to produce images that are both hilarious and shareable.'
+        content: 'Sybau Style is a cutting-edge AI art style specifically designed for creating viral meme content. This innovative approach combines advanced machine learning with internet culture to produce images that are both hilarious and shareable.'
       },
       howTo: {
         title: 'How to Create Your Meme',
@@ -172,11 +170,11 @@ export const fallbackTranslations = {
         posts: {
           sybauStory: {
             title: '🚀 Sybau Guy\'s Rise: From Zero to Meme King',
-            excerpt: 'How an ordinary person rose from the bottom using Lazer Dim 700 technology to become the most popular meme creator online. A story of persistence, innovation, and never giving up.'
+            excerpt: 'How an ordinary person rose from the bottom using Sybau technology to become the most popular meme creator online. A story of persistence, innovation, and never giving up.'
           },
           comparison: {
             title: '🎭 Sybau vs Traditional Editing: AI Era Creative Revolution',
-            excerpt: 'Why Sybau Lazer Dim 700 technology completely outperforms traditional photo editing software? See these stunning comparison cases and understand the true power of AI creation!'
+            excerpt: 'Why Sybau technology completely outperforms traditional photo editing software? See these stunning comparison cases and understand the true power of AI creation!'
           },
           tutorial: {
             title: '🎪 Master Sybau Picture in 5 Minutes: From Novice to Expert',
@@ -427,7 +425,7 @@ export const fallbackTranslations = {
       hero: {
         title: '创作病毒式',
         subtitle: '几秒钟完成',
-        description: '使用我们的AI技术将任何照片转换成搞笑的Sybau Lazer Dim 700风格表情包。无需设计技能 - 只需上传并观看奇迹发生！',
+        description: '使用我们的AI技术将任何照片转换成有创意的风格图片。无需设计技能 - 只需上传并观看奇迹发生！',
         benefit1: '100% 免费',
         benefit2: '无需注册',
         benefit3: '高清质量',
@@ -442,7 +440,7 @@ export const fallbackTranslations = {
           title: '创建病毒式',
           subtitle: 'Sybau表情包',
           tagline: '仅需几秒',
-          description: '使用我们的AI技术将任何照片转换成搞笑的Sybau Lazer Dim 700风格表情包！无需设计技能 - 只需上传并观看奇迹发生！'
+          description: '使用我们的AI技术将任何照片转换成有创意的风格图片！无需设计技能 - 只需上传并观看奇迹发生！'
         },
         benefits: {
           free: '100%免费',
@@ -533,9 +531,9 @@ export const fallbackTranslations = {
         }
       },
       whatIs: {
-        title: '什么是Sybau Lazer Dim 700？',
-        description: '一种独特的AI艺术风格，创造病毒式表情包内容',
-        content: 'Sybau Lazer Dim 700是一种专门为创造病毒式表情包内容而设计的前沿AI艺术风格。这种创新方法将先进的机器学习与互联网文化相结合，产生既搞笑又易于分享的图像。'
+        title: '什么是Sybau创意风格？',
+        description: '一种独特的AI艺术风格，创造病毒式创意内容',
+        content: 'Sybau创意风格是一种专门为创造病毒式创意内容而设计的前沿AI艺术风格。这种创新方法将先进的机器学习与互联网文化相结合，产生既有创意又易于分享的图像。'
       },
       howTo: {
         title: '如何创建您的表情包',
@@ -588,11 +586,11 @@ export const fallbackTranslations = {
         posts: {
           sybauStory: {
             title: '🚀 Sybau Guy的逆袭之路：从废柴到表情包之王',
-            excerpt: '一个普通人如何通过Lazer Dim 700技术从底层崛起，成为全网最受欢迎的表情包创作者。这是一个关于坚持、创新和永不放弃的励志故事。'
+            excerpt: '一个普通人如何通过AI创意技术从底层崛起，成为全网最受欢迎的创意内容创作者。这是一个关于坚持、创新和永不放弃的励志故事。'
           },
           comparison: {
             title: '🎭 Sybau vs 传统P图：AI时代的创作革命',
-            excerpt: '为什么Sybau Lazer Dim 700技术能够完胜传统P图软件？看看这些震撼的对比案例，了解AI创作的真正威力！'
+            excerpt: '为什么Sybau AI技术能够完胜传统P图软件？看看这些震撼的对比案例，了解AI创作的真正威力！'
           },
           tutorial: {
             title: '🎪 5分钟掌握Sybau Picture：从新手到高手',
@@ -798,7 +796,7 @@ export const fallbackTranslations = {
         }
       },
       footer: {
-        description: '全球首个专注于Sybau Lazer Dim 700风格的AI表情包生成平台。让每个人都能轻松创作出病毒式传播的搞笑内容。',
+        description: '全球首个专注于Sybau风格的AI创意图片生成平台。让每个人都能轻松创作出病毒式传播的创意图片。',
         product: {
           title: '产品',
           generator: 'AI生成器',
@@ -1722,129 +1720,8 @@ export const fallbackTranslations = {
   }
 }
 
-// 获取翻译内容
-export async function getTranslation(pagePath: string, langCode: SupportedLanguage) {
-  try {
-    // 如果数据库不可用，直接使用备用翻译
-    if (!prisma) {
-      console.warn('⚠️  数据库不可用，使用备用翻译数据')
-      return fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.[langCode] ||
-             fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.['en'] ||
-             null
-    }
-
-    const translation = await prisma.translation.findUnique({
-      where: {
-        pagePath_langCode: {
-          pagePath,
-          langCode
-        }
-      },
-      select: {
-        content: true,
-        lastUpdated: true
-      }
-    })
-
-    if (!translation) {
-      // 如果找不到翻译，返回英文版本
-      if (langCode !== 'en') {
-        return getTranslation(pagePath, 'en')
-      }
-      // 使用备用翻译数据
-      return fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.[langCode] ||
-             fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.['en'] ||
-             null
-    }
-
-    return translation.content
-  } catch (error) {
-    console.error('Failed to get translation, using fallback:', error)
-    // 返回备用翻译数据
-    return fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.[langCode] ||
-           fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.['en'] ||
-           null
-  }
-}
-
-// 获取所有页面的翻译
-export async function getAllTranslations(langCode: SupportedLanguage) {
-  try {
-    // 如果数据库不可用，返回备用翻译
-    if (!prisma) {
-      console.warn('⚠️  数据库不可用，使用备用翻译数据')
-      const translationMap: Record<string, any> = {}
-      Object.keys(fallbackTranslations).forEach(pagePath => {
-        const translation = fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.[langCode] ||
-                           fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.['en']
-        if (translation) {
-          translationMap[pagePath] = translation
-        }
-      })
-      return translationMap
-    }
-
-    const translations = await prisma.translation.findMany({
-      where: {
-        langCode,
-        isActive: true
-      },
-      select: {
-        pagePath: true,
-        content: true
-      }
-    })
-
-    const translationMap: Record<string, any> = {}
-    translations.forEach(t => {
-      translationMap[t.pagePath] = t.content
-    })
-
-    return translationMap
-  } catch (error) {
-    console.error('Failed to get all translations:', error)
-    return {}
-  }
-}
-
-// 保存翻译
-export async function saveTranslation(
-  pagePath: string,
-  langCode: SupportedLanguage,
-  content: any
-) {
-  try {
-    // 如果数据库不可用，跳过保存
-    if (!prisma) {
-      console.warn('⚠️  数据库不可用，跳过翻译保存')
-      return false
-    }
-
-    await prisma.translation.upsert({
-      where: {
-        pagePath_langCode: {
-          pagePath,
-          langCode
-        }
-      },
-      update: {
-        content,
-        lastUpdated: new Date(),
-        isActive: true
-      },
-      create: {
-        pagePath,
-        langCode,
-        content,
-        isActive: true
-      }
-    })
-    return true
-  } catch (error) {
-    console.error('Failed to save translation:', error)
-    return false
-  }
-}
+// 数据库相关的翻译函数已移动到 lib/i18n-server.ts
+// 这个文件只保留客户端安全的工具函数和备用翻译数据
 
 // 浏览器语言检测
 export function detectBrowserLanguage(): SupportedLanguage {

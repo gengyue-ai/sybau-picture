@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ArrowRight, Sparkles, Rocket, Star, TrendingUp, Heart, Users, Shield, Clock, Award, Check, Play } from 'lucide-react'
@@ -68,27 +68,31 @@ const staticTexts = {
     'home.pricing.free.price': '$0',
     'home.pricing.free.period': 'forever',
     'home.pricing.free.description': 'Perfect for getting started',
-    'home.pricing.free.feature1': '5 generations per day',
+    'home.pricing.free.feature1': 'Free creative experience',
     'home.pricing.free.feature2': 'Basic Sybau styles',
     'home.pricing.free.feature3': 'Standard quality',
-    'home.pricing.pro.title': 'Pro',
+    'home.pricing.pro.title': 'Standard',
     'home.pricing.pro.price': '$9',
     'home.pricing.pro.period': 'per month',
-    'home.pricing.pro.description': 'Best for creative professionals',
-    'home.pricing.pro.feature1': '200 generations per month',
+    'home.pricing.pro.description': 'Best for regular creators',
+    'home.pricing.pro.feature1': '60 generations per month',
     'home.pricing.pro.feature2': 'All Sybau styles',
     'home.pricing.pro.feature3': 'High quality, no watermarks',
-    'home.pricing.enterprise.title': 'Enterprise',
+    'home.pricing.enterprise.title': 'Professional',
     'home.pricing.enterprise.price': '$19',
     'home.pricing.enterprise.period': 'per month',
     'home.pricing.enterprise.description': 'For businesses and power users',
-    'home.pricing.enterprise.feature1': 'Unlimited generations',
-    'home.pricing.enterprise.feature2': 'Exclusive styles + API',
-    'home.pricing.enterprise.feature3': 'Ultra high quality',
+    'home.pricing.enterprise.feature1': '180 generations per month',
+    'home.pricing.enterprise.feature2': 'Exclusive styles + priority support',
+    'home.pricing.enterprise.feature3': 'Ultra high quality + commercial license',
     'home.pricing.viewAllPlans': 'View All Plans',
+    'home.pricing.popular': 'Most Popular',
     'home.cta.title': 'Ready to Go Viral? 🚀',
     'home.cta.description': 'Join millions of creators who are already embracing the Sybau lifestyle. Stay Young, Beautiful and Unique with our AI-powered creative platform!',
     'home.cta.startCreating': 'Start Creating Now',
+    'home.cta.getStarted': 'Get Started',
+    'home.cta.signUp': 'Sign Up Now',
+    'home.cta.choosePlan': 'Choose Plan',
     'home.footer.features': 'Sybau Picture supports JPG, PNG, WebP formats and text prompts • No registration required • 100% free to use',
     'home.footer.secure': 'Secure Processing',
     'home.footer.speed': '8-Second Generation',
@@ -188,27 +192,31 @@ const staticTexts = {
     'home.pricing.free.price': '$0',
     'home.pricing.free.period': '永久',
     'home.pricing.free.description': '完美的入门体验',
-    'home.pricing.free.feature1': '每日5次生成',
+    'home.pricing.free.feature1': '免费创作体验',
     'home.pricing.free.feature2': '基础Sybau风格',
     'home.pricing.free.feature3': '标准质量',
-    'home.pricing.pro.title': '专业版',
+    'home.pricing.pro.title': '标准版',
     'home.pricing.pro.price': '$9',
     'home.pricing.pro.period': '每月',
-    'home.pricing.pro.description': '最适合创意专业人士',
-    'home.pricing.pro.feature1': '每月200次生成',
+    'home.pricing.pro.description': '最适合常规创作者',
+    'home.pricing.pro.feature1': '每月60次生成',
     'home.pricing.pro.feature2': '所有Sybau风格',
     'home.pricing.pro.feature3': '高质量，无水印',
-    'home.pricing.enterprise.title': '企业版',
+    'home.pricing.enterprise.title': '专业版',
     'home.pricing.enterprise.price': '$19',
     'home.pricing.enterprise.period': '每月',
-    'home.pricing.enterprise.description': '适合企业和超级用户',
-    'home.pricing.enterprise.feature1': '无限生成',
-    'home.pricing.enterprise.feature2': '独家风格 + API',
-    'home.pricing.enterprise.feature3': '超高质量',
+    'home.pricing.enterprise.description': '适合企业和专业用户',
+    'home.pricing.enterprise.feature1': '每月180次生成',
+    'home.pricing.enterprise.feature2': '独家风格 + 优先支持',
+    'home.pricing.enterprise.feature3': '超高质量 + 商业许可证',
     'home.pricing.viewAllPlans': '查看所有套餐',
+    'home.pricing.popular': '最受欢迎',
     'home.cta.title': '准备好病毒式传播了吗？🚀',
     'home.cta.description': '加入已经拥抱Sybau生活方式的数百万创作者。通过我们的AI驱动创意平台 Stay Young, Beautiful and Unique！',
     'home.cta.startCreating': '立即开始创作',
+    'home.cta.getStarted': '开始使用',
+    'home.cta.signUp': '立即注册',
+    'home.cta.choosePlan': '选择套餐',
     'home.footer.features': 'Sybau Picture支持JPG、PNG、WebP格式和文本提示 • 无需注册 • 100%免费使用',
     'home.footer.secure': '安全处理',
     'home.footer.speed': '8秒生成',
@@ -253,7 +261,21 @@ const staticTexts = {
 
 export default function HomePageClient() {
   const pathname = usePathname()
+  const router = useRouter()
   const [stats, setStats] = useState({ memes: 125000, rating: 4.9, countries: 180 })
+
+  const handlePlanClick = (planType: 'free' | 'standard' | 'professional') => {
+    const currentLang = getCurrentLanguage()
+
+    if (planType === 'free') {
+      // 免费版直接开始使用
+      return
+    } else {
+      // 付费版跳转到对应语言的登录页面
+      const loginPath = currentLang === 'zh' ? '/zh/auth/signin' : '/auth/signin'
+      router.push(loginPath)
+    }
+  }
 
   const getCurrentLanguage = () => {
     const segments = pathname.split('/').filter(Boolean)
@@ -270,7 +292,7 @@ export default function HomePageClient() {
     return (staticTexts as any)[currentLang]?.[key] || (staticTexts.en as any)[key] || fallback
   }
 
-  return (
+    return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-cyan-50">
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -619,29 +641,34 @@ export default function HomePageClient() {
                   <span className="text-gray-700">{getText('home.pricing.free.feature3', 'Standard quality')}</span>
                 </div>
               </div>
-              <Button className="w-full" variant="outline" size="lg">
-                {getText('home.cta.startCreating', 'Start Creating Now')}
+              <Button
+                className="w-full"
+                variant="outline"
+                size="lg"
+                onClick={() => handlePlanClick('free')}
+              >
+                {getText('home.cta.getStarted', 'Get Started')}
               </Button>
             </div>
 
-            {/* Pro Plan */}
+            {/* Standard Plan */}
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center transition-all duration-300 hover:shadow-xl ring-2 ring-purple-500 scale-105 relative">
               <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-4 py-1 text-sm font-medium rounded-bl-lg rounded-tr-2xl">
-                Most Popular
+                {getText('home.pricing.popular', 'Most Popular')}
               </div>
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-6">
                 <Sparkles className="w-8 h-8" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">{getText('home.pricing.pro.title', 'Pro')}</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">{getText('home.pricing.pro.title', 'Standard')}</h3>
               <div className="text-4xl font-bold text-gray-900 mb-2">
                 {getText('home.pricing.pro.price', '$9')}
                 <span className="text-lg font-normal text-gray-600">/{getText('home.pricing.pro.period', 'per month')}</span>
               </div>
-              <p className="text-gray-600 mb-6">{getText('home.pricing.pro.description', 'Best for creative professionals')}</p>
+              <p className="text-gray-600 mb-6">{getText('home.pricing.pro.description', 'Best for regular creators')}</p>
               <div className="space-y-3 mb-8">
                 <div className="flex items-center justify-center">
                   <Check className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">{getText('home.pricing.pro.feature1', '200 generations per month')}</span>
+                  <span className="text-gray-700">{getText('home.pricing.pro.feature1', '60 generations per month')}</span>
                 </div>
                 <div className="flex items-center justify-center">
                   <Check className="w-5 h-5 text-green-500 mr-3" />
@@ -652,17 +679,21 @@ export default function HomePageClient() {
                   <span className="text-gray-700">{getText('home.pricing.pro.feature3', 'High quality, no watermarks')}</span>
                 </div>
               </div>
-              <Button className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600" size="lg">
-                {getText('home.cta.startCreating', 'Start Creating Now')}
+              <Button
+                className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                size="lg"
+                onClick={() => handlePlanClick('standard')}
+              >
+                {getText('home.cta.signUp', 'Sign Up Now')}
               </Button>
             </div>
 
-            {/* Enterprise Plan */}
+            {/* Professional Plan */}
             <div className="bg-white rounded-2xl shadow-lg p-8 text-center transition-all duration-300 hover:shadow-xl">
               <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center text-white mx-auto mb-6">
                 <Rocket className="w-8 h-8" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-800 mb-2">{getText('home.pricing.enterprise.title', 'Enterprise')}</h3>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">{getText('home.pricing.enterprise.title', 'Professional')}</h3>
               <div className="text-4xl font-bold text-gray-900 mb-2">
                 {getText('home.pricing.enterprise.price', '$19')}
                 <span className="text-lg font-normal text-gray-600">/{getText('home.pricing.enterprise.period', 'per month')}</span>
@@ -671,25 +702,33 @@ export default function HomePageClient() {
               <div className="space-y-3 mb-8">
                 <div className="flex items-center justify-center">
                   <Check className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">{getText('home.pricing.enterprise.feature1', 'Unlimited generations')}</span>
+                  <span className="text-gray-700">{getText('home.pricing.enterprise.feature1', '180 generations per month')}</span>
                 </div>
                 <div className="flex items-center justify-center">
                   <Check className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">{getText('home.pricing.enterprise.feature2', 'Exclusive styles + API')}</span>
+                  <span className="text-gray-700">{getText('home.pricing.enterprise.feature2', 'Exclusive styles + priority support')}</span>
                 </div>
                 <div className="flex items-center justify-center">
                   <Check className="w-5 h-5 text-green-500 mr-3" />
-                  <span className="text-gray-700">{getText('home.pricing.enterprise.feature3', 'Ultra high quality')}</span>
+                  <span className="text-gray-700">{getText('home.pricing.enterprise.feature3', 'Ultra high quality + commercial license')}</span>
                 </div>
               </div>
-              <Button className="w-full" variant="outline" size="lg">
-                {getText('home.cta.startCreating', 'Start Creating Now')}
+              <Button
+                className="w-full"
+                variant="outline"
+                size="lg"
+                onClick={() => handlePlanClick('professional')}
+              >
+                {getText('home.cta.choosePlan', 'Choose Plan')}
               </Button>
             </div>
           </div>
 
           <div className="text-center mt-12">
-            <a href="/pricing" className="inline-flex items-center text-purple-600 hover:text-purple-700 font-semibold">
+            <a
+              href={getCurrentLanguage() === 'zh' ? '/zh/pricing' : '/pricing'}
+              className="inline-flex items-center text-purple-600 hover:text-purple-700 font-semibold"
+            >
               {getText('home.pricing.viewAllPlans', 'View All Plans')}
               <ArrowRight className="w-4 h-4 ml-2" />
             </a>

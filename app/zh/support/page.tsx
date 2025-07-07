@@ -23,7 +23,7 @@ export default function ZHSupportPage() {
     },
     {
       question: '我每月可以生成多少张图片？',
-      answer: '免费用户每月可以生成3张图片。标准版用户每月50张，专业版用户每月200张。'
+      answer: '免费用户享有基础体验配额。标准版用户每月60张，专业版用户每月180张。'
     }
   ]
 

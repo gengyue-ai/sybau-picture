@@ -84,11 +84,11 @@ export async function POST(request: NextRequest) {
         console.log('Image converted to base64, length:', base64.length)
       }
 
-      prompt = promptText || 'Transform this image into a Sybau Lazer Dim 700 style meme'
+      prompt = promptText || 'Transform this image into a Sybau style meme'
     } else {
       // 处理 JSON 请求
       const body = await request.json()
-      prompt = body.prompt || 'Create a Sybau Lazer Dim 700 style image'
+      prompt = body.prompt || 'Create a Sybau style image'
       imageUrl = body.image_url || ''
     }
 
@@ -112,7 +112,7 @@ export async function POST(request: NextRequest) {
         ...input,
         image_url: imageUrl,
         strength: 0.25,
-        prompt: `Based on the original image, keep the exact same person, pose, and background. Only enhance and exaggerate the facial expressions and gestures to make them more funny and humorous in Sybau Lazer Dim 700 style. Add subtle glowing eyes effect, slightly distorted facial features for comedic effect, maintain original composition and lighting`,
+        prompt: `Based on the original image, keep the exact same person, pose, and background. Only enhance and exaggerate the facial expressions and gestures to make them more funny and humorous in Sybau style. Add subtle glowing eyes effect, slightly distorted facial features for comedic effect, maintain original composition and lighting`,
         num_inference_steps: 12,
         guidance_scale: 8.0
       }

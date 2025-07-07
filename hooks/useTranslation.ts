@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import {
   extractLanguageFromPath,
-  getTranslation,
   DEFAULT_LANGUAGE,
+  fallbackTranslations,
   type SupportedLanguage
 } from '@/lib/i18n'
 
@@ -25,14 +25,16 @@ export function useTranslation(pagePath: string = '/') {
   useEffect(() => {
     let isMounted = true
 
-    async function loadTranslations() {
+    function loadTranslations() {
       if (!isMounted) return
 
       try {
         setIsLoading(true)
 
-        // 获取翻译内容
-        const translationData = await getTranslation(pagePath, currentLanguage)
+        // 直接使用备用翻译数据
+        const translationData = fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.[currentLanguage] ||
+                               fallbackTranslations[pagePath as keyof typeof fallbackTranslations]?.['en'] ||
+                               null
 
         if (isMounted) {
           if (translationData && typeof translationData === 'object') {
@@ -55,18 +57,11 @@ export function useTranslation(pagePath: string = '/') {
       }
     }
 
-    // 设置最大loading时间
-    const maxLoadingTimeout = setTimeout(() => {
-      if (isMounted) {
-        setIsLoading(false)
-      }
-    }, 300) // 300ms最大loading时间
-
+    // 直接加载翻译数据（不再需要异步）
     loadTranslations()
 
     return () => {
       isMounted = false
-      clearTimeout(maxLoadingTimeout)
     }
   }, [pagePath, currentLanguage])
 
@@ -91,8 +86,8 @@ export function useTranslation(pagePath: string = '/') {
 
       // 检查结果是否有效
       if (current && typeof current === 'string' && current.length > 0) {
-        // 简单的乱码检测 - 检查是否包含基本的文字字符
-        const hasValidChars = /^[\w\s\u4e00-\u9fff\u0100-\u017f\u00c0-\u00ff\u0400-\u04ff\u0590-\u05ff\u0600-\u06ff\u3040-\u309f\u30a0-\u30ff\-_.,!?()[\]{}:;"'\/\\@#$%^&*+=|<>~`]*$/.test(current)
+        // 简化的乱码检测 - 只检查是否为空或纯特殊符号
+        const hasValidChars = current.trim().length > 0 && !/^[\s\u0000-\u001f\u007f-\u009f]*$/.test(current)
 
         if (hasValidChars) {
           return current

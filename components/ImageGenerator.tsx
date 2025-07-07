@@ -383,53 +383,61 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   const showLoginPrompt = !session
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
-      {/* Upload/Input Section */}
-      <Card className="p-8 bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-100">
-        <CardHeader className="text-center">
-          <div className="flex items-center justify-center mb-4">
-            {generationMode === 'text-to-image' ? (
-              <Type className="h-12 w-12 text-purple-600" />
-            ) : (
-              <Upload className="h-12 w-12 text-purple-600" />
-            )}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Upload/Input Section - 紧凑现代设计 */}
+      <Card className="p-6 bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 border border-purple-200/60 backdrop-blur-sm shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300">
+        <CardHeader className="text-center pb-4">
+          <div className="relative mb-3">
+            <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+              {generationMode === 'text-to-image' ? (
+                <Type className="h-8 w-8 text-white" />
+              ) : (
+                <Upload className="h-8 w-8 text-white" />
+              )}
+            </div>
+            {/* 科技感装饰 */}
+            <div className="absolute top-0 right-0 w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
+            <div className="absolute bottom-0 left-0 w-2 h-2 bg-green-400 rounded-full animate-bounce delay-300"></div>
           </div>
-          <CardTitle className="text-2xl text-purple-800">{texts.uploadTitle}</CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
+            {texts.uploadTitle}
+          </CardTitle>
+          <CardDescription className="text-sm text-gray-600">
             {texts.uploadDescription}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Mode Selection */}
-          <div className="space-y-3">
-            <Label className="text-sm font-medium text-gray-700">Generation Mode</Label>
+
+        <CardContent className="space-y-4">
+          {/* Mode Selection - 更紧凑的设计 */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Generation Mode</Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={generationMode === 'text-to-image' ? "default" : "outline"}
-                className={`p-3 h-auto border-2 transition-all ${
+                className={`p-2 h-auto border transition-all rounded-xl ${
                   generationMode === 'text-to-image'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent'
-                    : 'border-purple-200 bg-white text-gray-700'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg scale-105'
+                    : 'border-purple-200 bg-white/80 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeSwitch('text-to-image')}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col items-center space-y-1">
                   <Type className="w-4 h-4" />
-                  <span className="text-sm font-medium">{texts.textToImageMode || 'Text to Image'}</span>
+                  <span className="text-xs font-medium">Text</span>
                 </div>
               </Button>
               <Button
                 variant={generationMode === 'image-to-image' ? "default" : "outline"}
-                className={`p-3 h-auto border-2 transition-all ${
+                className={`p-2 h-auto border transition-all rounded-xl ${
                   generationMode === 'image-to-image'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent'
-                    : 'border-purple-200 bg-white text-gray-700'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg scale-105'
+                    : 'border-purple-200 bg-white/80 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeSwitch('image-to-image')}
               >
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-col items-center space-y-1">
                   <ImageIcon className="w-4 h-4" />
-                  <span className="text-sm font-medium">{texts.imageToImageMode || 'Image to Image'}</span>
+                  <span className="text-xs font-medium">Image</span>
                 </div>
               </Button>
             </div>
@@ -437,9 +445,9 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
 
           {/* Conditional Input Based on Mode */}
           {generationMode === 'text-to-image' ? (
-            /* Text Input for Text-to-Image */
+            /* Text Input for Text-to-Image - 压缩高度 */
             <div className="space-y-2">
-              <Label htmlFor="textPrompt" className="text-sm font-medium text-gray-700">
+              <Label htmlFor="textPrompt" className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
                 {texts.textPromptLabel || 'Text Prompt'}
               </Label>
               <Textarea
@@ -447,19 +455,20 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 placeholder={texts.textPromptPlaceholder || 'Describe what you want to create...'}
                 value={textPrompt}
                 onChange={(e) => setTextPrompt(e.target.value)}
-                className="w-full min-h-[120px] resize-none"
-                rows={5}
+                className="w-full min-h-[80px] resize-none border-purple-200 rounded-xl focus:border-purple-400 focus:ring-purple-400"
+                rows={3}
               />
-              <p className="text-xs text-gray-500">
-                Be specific about what you want to create. Include style, colors, mood, and any details.
+              <p className="text-xs text-gray-500 flex items-center">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Include style, colors, mood, and details for best results
               </p>
             </div>
           ) : (
-            /* File Upload for Image-to-Image */
+            /* File Upload for Image-to-Image - 压缩高度 */
             <>
               <div
-                className={`border-2 border-dashed rounded-lg p-8 text-center bg-white/50 transition-colors cursor-pointer ${
-                  isDragging ? 'border-purple-400 bg-purple-50' : 'border-purple-200'
+                className={`border-2 border-dashed rounded-xl p-4 text-center bg-white/60 backdrop-blur-sm transition-all cursor-pointer group ${
+                  isDragging ? 'border-purple-400 bg-purple-50 scale-105' : 'border-purple-200 hover:border-purple-300'
                 }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
@@ -475,14 +484,14 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 />
 
                 {file && previewUrl ? (
-                  <div className="space-y-4">
+                  <div className="space-y-2">
                     <div className="relative">
                       <img
                         src={previewUrl}
                         alt="Preview"
-                        className="w-full h-48 object-cover rounded-lg shadow-lg"
+                        className="w-full h-32 object-cover rounded-lg shadow-md"
                       />
-                      <div className="absolute top-2 right-2">
+                      <div className="absolute top-1 right-1">
                         <Button
                           variant="outline"
                           size="sm"
@@ -490,75 +499,79 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                             e.stopPropagation()
                             resetGenerator()
                           }}
-                          className="bg-white/80 backdrop-blur-sm"
+                          className="h-6 w-6 p-0 bg-white/90 backdrop-blur-sm border-gray-300"
                         >
-                          <X className="h-4 w-4" />
+                          <X className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>
                     <div className="text-center">
-                      <p className="text-lg font-medium text-gray-700">{file.name}</p>
-                      <p className="text-sm text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      <p className="text-sm font-medium text-gray-700 truncate">{file.name}</p>
+                      <p className="text-xs text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
-                    <Upload className="h-16 w-16 text-purple-400 mx-auto" />
-                    <p className="text-lg font-medium text-gray-700">{texts.dragAndDrop}</p>
-                    <p className="text-sm text-gray-500">{texts.clickToBrowse}</p>
-                    <p className="text-xs text-gray-400">
-                      {texts.supportedFormats} • {texts.maxFileSize}
-                    </p>
+                  <div className="space-y-2 py-2">
+                    <div className="relative">
+                      <Upload className="h-10 w-10 text-purple-400 mx-auto group-hover:scale-110 transition-transform" />
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                    </div>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-gray-700">{texts.dragAndDrop}</p>
+                      <p className="text-xs text-gray-500">{texts.clickToBrowse}</p>
+                      <p className="text-xs text-gray-400 flex items-center justify-center">
+                        <ImageIcon className="w-3 h-3 mr-1" />
+                        JPG, PNG, WebP • Max 5MB
+                      </p>
+                    </div>
                   </div>
                 )}
               </div>
 
               {/* Style Prompt for Image-to-Image */}
               <div className="space-y-2">
-                <Label htmlFor="prompt" className="text-sm font-medium text-gray-700">
-                  {texts.promptLabel}
+                <Label htmlFor="prompt" className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                  Style Enhancement
                 </Label>
                 <Input
                   id="prompt"
                   type="text"
-                  placeholder={texts.promptPlaceholder}
+                  placeholder="Optional: Describe desired style changes..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full"
+                  className="w-full border-purple-200 rounded-xl focus:border-purple-400"
                 />
               </div>
             </>
           )}
 
-          {/* Error Display - 优化的友好提示 */}
+          {/* Error Display - 紧凑的错误提示 */}
           {error && (
-            <div className={`p-4 rounded-xl border ${
+            <div className={`p-3 rounded-xl border ${
               error.includes('请先登录')
                 ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'
                 : 'bg-red-50 border-red-200'
             }`}>
               {error.includes('请先登录') ? (
-                <div className="space-y-3">
+                <div className="space-y-2">
                   <div className="flex items-center space-x-2">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
+                    <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                      <User className="w-3 h-3 text-white" />
                     </div>
                     <div>
-                      <div className="font-medium text-gray-800">🎨 开始您的创作之旅！</div>
-                      <div className="text-sm text-gray-600">
-                        您的输入已安全保存，登录后将自动恢复 ✨
-                      </div>
+                      <div className="text-sm font-medium text-gray-800">🎨 登录开始创作</div>
+                      <div className="text-xs text-gray-600">输入已保存，登录后自动恢复</div>
                     </div>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <Link href="/auth/signin" className="flex-1">
-                      <Button size="sm" variant="outline" className="w-full border-purple-300 text-purple-700 hover:bg-purple-50">
-                        🚀 立即登录
+                      <Button size="sm" variant="outline" className="w-full h-8 text-xs border-purple-300 text-purple-700">
+                        登录
                       </Button>
                     </Link>
                     <Link href="/auth/signup" className="flex-1">
-                      <Button size="sm" className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white hover:shadow-lg">
-                        ✨ 免费注册
+                      <Button size="sm" className="w-full h-8 text-xs bg-gradient-to-r from-purple-600 to-pink-600">
+                        注册
                       </Button>
                     </Link>
                   </div>
@@ -574,20 +587,30 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
         </CardContent>
       </Card>
 
-      {/* Settings & Results Section */}
-      <Card className="p-8 bg-gradient-to-br from-cyan-50 to-blue-50 border-2 border-cyan-100">
-        <CardHeader className="text-center">
-          <Wand2 className="h-12 w-12 text-cyan-600 mx-auto mb-4" />
-          <CardTitle className="text-2xl text-cyan-800">{texts.settingsTitle}</CardTitle>
-          <CardDescription className="text-gray-600">
+      {/* Settings & Results Section - 紧凑现代设计 */}
+      <Card className="p-6 bg-gradient-to-br from-cyan-50/50 via-white to-blue-50/50 border border-cyan-200/60 backdrop-blur-sm shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300">
+        <CardHeader className="text-center pb-4">
+          <div className="relative mb-3">
+            <div className="w-16 h-16 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
+              <Wand2 className="h-8 w-8 text-white" />
+            </div>
+            {/* 科技感装饰 */}
+            <div className="absolute top-0 left-0 w-3 h-3 bg-purple-400 rounded-full animate-pulse delay-150"></div>
+            <div className="absolute bottom-0 right-0 w-2 h-2 bg-pink-400 rounded-full animate-bounce delay-500"></div>
+          </div>
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-cyan-700 to-blue-600 bg-clip-text text-transparent">
+            {texts.settingsTitle}
+          </CardTitle>
+          <CardDescription className="text-sm text-gray-600">
             {texts.settingsDescription}
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
-          {/* User Plan and Usage Info - 简化显示 */}
+
+        <CardContent className="space-y-4">
+          {/* User Plan and Usage Info - 更紧凑 */}
           {session && userPlan && usage && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-xl border border-purple-200">
-              <div className="flex items-center justify-between mb-2">
+            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200/60">
+              <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center space-x-2">
                   {userPlan.name === 'pro' ? (
                     <Crown className="w-4 h-4 text-amber-500" />
@@ -596,30 +619,29 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                   ) : (
                     <Sparkles className="w-4 h-4 text-purple-500" />
                   )}
-                  <span className="font-medium text-gray-800 capitalize">{userPlan.name} Plan</span>
+                  <span className="text-sm font-medium text-gray-800 capitalize">{userPlan.name}</span>
                 </div>
                 <Link href="/pricing" className="text-xs text-purple-600 hover:underline">
-                  升级套餐
+                  升级
                 </Link>
               </div>
-              <div className="flex items-center justify-between text-sm text-gray-600">
-                <span>本月使用量: {usage.current}/{usage.max}</span>
-                <span className={`px-2 py-1 rounded text-xs ${
+              <div className="flex items-center justify-between text-xs text-gray-600">
+                <span>使用: {usage.current}/{usage.max}</span>
+                <span className={`px-2 py-0.5 rounded text-xs ${
                   usage.remaining > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                 }`}>
-                  剩余 {usage.remaining} 张
+                  剩余 {usage.remaining}
                 </span>
               </div>
             </div>
           )}
 
-          {/* Mode Selection - 简洁的风格选择 */}
+          {/* Mode Selection - 更紧凑的风格选择 */}
           <div>
-            <Label className="block text-sm font-medium text-gray-700 mb-3">
-              {texts.modeLabel || 'Style Mode'}
+            <Label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
+              AI Style Mode
             </Label>
             <div className="grid grid-cols-1 gap-2">
-              {/* 显示所有模式 */}
               {allModes.map((mode) => {
                 const Icon = mode.icon
                 const isAvailable = availableModes.includes(mode)
@@ -628,21 +650,21 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                   <Button
                     key={mode.id}
                     variant={selectedMode === mode.id ? "default" : "outline"}
-                    className={`p-4 h-auto border-2 transition-all ${
+                    className={`p-3 h-auto border transition-all rounded-xl ${
                       selectedMode === mode.id
-                        ? `bg-gradient-to-r ${mode.color} text-white border-transparent shadow-lg`
-                        : 'border-cyan-200 bg-white text-gray-700 hover:border-cyan-300'
+                        ? `bg-gradient-to-r ${mode.color} text-white border-transparent shadow-lg scale-105`
+                        : 'border-cyan-200 bg-white/80 text-gray-700 hover:border-cyan-300 hover:bg-cyan-50'
                     }`}
                     onClick={() => setSelectedMode(mode.id)}
                   >
-                    <div className="flex items-center space-x-3 w-full">
-                      <Icon className="w-5 h-5" />
+                    <div className="flex items-center space-x-2 w-full">
+                      <Icon className="w-4 h-4" />
                       <div className="text-left flex-1">
                         <div className="flex items-center space-x-2">
                           <span className="text-sm font-medium">{mode.name}</span>
                           {isFree && (
-                            <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full font-medium">
-                              免费
+                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
+                              Free
                             </span>
                           )}
                         </div>
@@ -657,12 +679,15 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
             </div>
           </div>
 
-          {/* Intensity Slider - 移除限制提示 */}
+          {/* Intensity Slider - 更紧凑 */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-medium text-gray-700">
-                {texts.intensityLabel || 'Intensity Level'} ({intensity}/5)
+              <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                Style Intensity
               </Label>
+              <span className="text-xs font-bold text-cyan-600 bg-cyan-100 px-2 py-1 rounded-full">
+                {intensity}/5
+              </span>
             </div>
             <div className="space-y-2">
               <input
@@ -671,40 +696,38 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 max="5"
                 value={intensity}
                 onChange={(e) => setIntensity(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-modern"
                 style={{
                   background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((intensity - 1) / 4) * 100}%, #e5e7eb ${((intensity - 1) / 4) * 100}%, #e5e7eb 100%)`
                 }}
               />
               <div className="flex justify-between text-xs text-gray-500">
-                <span>轻微</span>
-                <span>中等</span>
-                <span>强烈</span>
-                <span>很强</span>
-                <span>极强</span>
+                <span>Subtle</span>
+                <span>Strong</span>
+                <span>Extreme</span>
               </div>
             </div>
           </div>
 
-          {/* Generate Button - 醒目的免费体验按钮 */}
+          {/* Generate Button - 更紧凑但突出 */}
           <div className="space-y-2">
             <Button
               onClick={handleGenerate}
               disabled={isGenerating}
-              className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 text-lg font-bold rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:shadow-2xl hover:scale-105 transform relative overflow-hidden"
+              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white py-3 text-base font-bold rounded-xl disabled:opacity-50 transition-all hover:shadow-xl hover:scale-105 transform relative overflow-hidden group"
             >
-              {/* 闪烁效果 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse" />
+              {/* 动态背景效果 */}
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
 
               {isGenerating ? (
                 <>
-                  <Loader2 className="w-6 h-6 mr-2 animate-spin" />
-                  {texts.generating}
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  AI创作中...
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-6 h-6 mr-2 animate-bounce" />
-                  {session ? texts.generateButton : '🎨 免费体验AI创作'}
+                  <Sparkles className="w-5 h-5 mr-2 animate-pulse" />
+                  {session ? '🚀 生成创作' : '🎨 免费体验'}
                 </>
               )}
             </Button>
@@ -712,44 +735,44 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
             {/* 未登录用户的引导提示 */}
             {!session && (
               <div className="text-center space-y-1">
-                <div className="flex items-center justify-center space-x-1 text-sm text-purple-600">
-                  <Sparkles className="w-4 h-4" />
-                  <span className="font-medium">每月1张免费图片</span>
-                  <Sparkles className="w-4 h-4" />
+                <div className="flex items-center justify-center space-x-1 text-xs text-purple-600">
+                  <Sparkles className="w-3 h-3" />
+                  <span className="font-medium">每月1张免费创作</span>
+                  <Sparkles className="w-3 h-3" />
                 </div>
                 <p className="text-xs text-gray-500">
-                  体验后可升级获得更多功能
+                  体验更多功能请升级套餐
                 </p>
               </div>
             )}
           </div>
 
-          {/* Generated Image Display */}
+          {/* Generated Image Display - 更紧凑 */}
           {generatedImage && (
-            <div className="space-y-4">
-              <div className="bg-white rounded-lg p-4 border-2 border-green-200">
+            <div className="space-y-3">
+              <div className="bg-white rounded-xl p-3 border border-green-200 shadow-md">
                 <img
                   src={generatedImage}
                   alt="Generated Sybau creation"
-                  className="w-full h-auto rounded-lg shadow-lg"
+                  className="w-full h-auto rounded-lg shadow-sm"
                 />
-                <div className="mt-3 flex justify-between items-center">
-                  <div className="flex items-center space-x-2">
-                    <Badge className={`bg-gradient-to-r ${allModes.find(m => m.id === selectedMode)?.color} text-white`}>
+                <div className="mt-2 flex justify-between items-center">
+                  <div className="flex items-center space-x-1">
+                    <Badge className={`bg-gradient-to-r ${allModes.find(m => m.id === selectedMode)?.color} text-white text-xs`}>
                       {allModes.find(m => m.id === selectedMode)?.name}
                     </Badge>
-                    <Badge variant="outline">
-                      {generationMode === 'text-to-image' ? 'Text→Image' : 'Image→Image'}
+                    <Badge variant="outline" className="text-xs">
+                      {generationMode === 'text-to-image' ? 'Text→AI' : 'Image→AI'}
                     </Badge>
                   </div>
-                  <span className="text-sm text-gray-500">Intensity: {intensity}/5</span>
+                  <span className="text-xs text-gray-500">Level {intensity}</span>
                 </div>
               </div>
               <Button
                 onClick={handleDownload}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 text-lg font-semibold rounded-xl transition-all"
+                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 text-sm font-semibold rounded-xl transition-all hover:shadow-lg"
               >
-                <Download className="w-5 h-5 mr-2" />
+                <Download className="w-4 h-4 mr-2" />
                 {texts.downloadButton}
               </Button>
             </div>

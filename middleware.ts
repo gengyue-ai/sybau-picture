@@ -29,19 +29,9 @@ export function middleware(request: NextRequest) {
 
   const currentLocale = getCurrentLocale(pathname)
 
-  // 如果URL已经包含语言代码，直接继续（用户主动选择的语言）
+  // 如果URL已经包含语言代码，直接继续
   if (currentLocale) {
     return NextResponse.next()
-  }
-
-  // 检查用户是否有语言偏好（通过cookie或浏览器设置）
-  const userLanguage = request.cookies.get('language')?.value ||
-                      request.headers.get('accept-language')?.split(',')[0]?.split('-')[0]
-
-  // 对于鉴权页面，如果用户语言偏好是中文，重定向到中文版本
-  if ((pathname === '/auth/signin' || pathname === '/auth/signup') &&
-      (userLanguage === 'zh' || userLanguage === 'zh-CN')) {
-    return NextResponse.redirect(new URL(`/zh${pathname}`, request.url))
   }
 
   // 对于没有语言前缀的路径，默认显示英文版本
