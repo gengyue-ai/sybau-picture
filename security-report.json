@@ -1,0 +1,70 @@
+{
+  "timestamp": "2025-07-08T08:40:50.233Z",
+  "sensitiveCommits": [
+    {
+      "commit": "c51c69638103142076bbb5bdde2e5978f9aca92d",
+      "issues": [
+        {
+          "commit": "c51c69638103142076bbb5bdde2e5978f9aca92d",
+          "file": ".env.backup",
+          "type": "sensitive_content",
+          "matches": [
+            "postgresql://postgres:password@localhost:5432/sybau_picture?schema=public"
+          ]
+        },
+        {
+          "commit": "c51c69638103142076bbb5bdde2e5978f9aca92d",
+          "file": "Prompt.md",
+          "type": "sensitive_content",
+          "matches": [
+            "postgresql://...\"\nNEXTAUTH_SECRET=\"your-secret-here\"\nNEXTAUTH_URL=\"http://localhost:3000\"\n\n# 图片处理 (三选一)\nREPLICATE_API_TOKEN=\"\"        # 推荐: Replicate\nSTABILITY_API_KEY=\"\"          # 备选: Stability AI\nRUNPOD_API_KEY=\"\"            # 备选: RunPod\n\n# 翻译服务\nOPENAI_API_KEY=\"\"\n\n# 文件存储\nUPLOADTHING_SECRET=\"\"\nUPLOADTHING_TOKEN=\"\"\n\n# 监控 (可选)\nSENTRY_DSN=\"\"\nPOSTHOG_KEY=\"\"\n```\n\n## 🗄 数据库设计与初始化\n\n### Prisma Schema\n```prisma\n// prisma/schema.prisma\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id            String    @id @default(cuid())\n  email         String    @unique\n  name          String?\n  password      String?   //"
+          ]
+        },
+        {
+          "commit": "c51c69638103142076bbb5bdde2e5978f9aca92d",
+          "file": "README.md",
+          "type": "sensitive_content",
+          "matches": [
+            "postgresql://user:password@localhost:5432/sybau_picture"
+          ]
+        },
+        {
+          "commit": "c51c69638103142076bbb5bdde2e5978f9aca92d",
+          "file": "lib/prisma.ts",
+          "type": "sensitive_content",
+          "matches": [
+            "postgresql://postgres:password@localhost:5432/sybau_picture"
+          ]
+        }
+      ]
+    }
+  ],
+  "currentIssues": [
+    {
+      "file": "Prompt.md",
+      "type": "sensitive_content",
+      "matches": [
+        "postgresql://...\"\nNEXTAUTH_SECRET=\"your-secret-here\"\nNEXTAUTH_URL=\"http://localhost:3000\"\n\n# 图片处理 (三选一)\nREPLICATE_API_TOKEN=\"\"        # 推荐: Replicate\nSTABILITY_API_KEY=\"\"          # 备选: Stability AI\nRUNPOD_API_KEY=\"\"            # 备选: RunPod\n\n# 翻译服务\nOPENAI_API_KEY=\"\"\n\n# 文件存储\nUPLOADTHING_SECRET=\"\"\nUPLOADTHING_TOKEN=\"\"\n\n# 监控 (可选)\nSENTRY_DSN=\"\"\nPOSTHOG_KEY=\"\"\n```\n\n## 🗄 数据库设计与初始化\n\n### Prisma Schema\n```prisma\n// prisma/schema.prisma\ngenerator client {\n  provider = \"prisma-client-js\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel User {\n  id            String    @id @default(cuid())\n  email         String    @unique\n  name          String?\n  password      String?   //"
+      ]
+    },
+    {
+      "file": "config/env.template",
+      "type": "sensitive_content",
+      "matches": [
+        "postgresql://username:password@host:port/database"
+      ]
+    },
+    {
+      "file": "lib/prisma.ts",
+      "type": "sensitive_content",
+      "matches": [
+        "postgresql://postgres:password@localhost:5432/sybau_picture"
+      ]
+    }
+  ],
+  "recommendations": [
+    "需要清理Git历史中的敏感信息",
+    "建议使用git filter-branch或BFG Repo-Cleaner",
+    "当前工作目录存在敏感文件，需要清理"
+  ]
+}

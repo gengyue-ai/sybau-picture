@@ -21,7 +21,7 @@ npm run dev
 ## 📋 项目概述
 
 **核心定位**: 全球首个专注于Sybau Lazer Dim 700风格的AI图片生成平台
-**技术目标**: 
+**技术目标**:
 - 图片处理时间 ≤8秒
 - 并发处理能力 1000+ RPM
 - 支持10种语言自动翻译
@@ -55,26 +55,26 @@ Translation: OpenAI GPT-4o
 
 ### 第三方服务集成
 ```env
-# 必需的环境变量
-DATABASE_URL="postgresql://..."
-NEXTAUTH_SECRET="your-secret-here"
-NEXTAUTH_URL="http://localhost:3000"
+# 必需的环境变量 (请参考 config/env.template 获取完整配置)
+DATABASE_URL="[YOUR_DATABASE_CONNECTION_STRING]"
+NEXTAUTH_SECRET="[GENERATE_RANDOM_32_CHAR_STRING]"
+NEXTAUTH_URL="[YOUR_DOMAIN_OR_LOCALHOST]"
 
 # 图片处理 (三选一)
-REPLICATE_API_TOKEN=""        # 推荐: Replicate
-STABILITY_API_KEY=""          # 备选: Stability AI
-RUNPOD_API_KEY=""            # 备选: RunPod
+REPLICATE_API_TOKEN="[YOUR_REPLICATE_TOKEN]"        # 推荐: Replicate
+STABILITY_API_KEY="[YOUR_STABILITY_TOKEN]"          # 备选: Stability AI
+RUNPOD_API_KEY="[YOUR_RUNPOD_TOKEN]"                # 备选: RunPod
 
 # 翻译服务
-OPENAI_API_KEY=""
+OPENAI_API_KEY="[YOUR_OPENAI_API_KEY]"
 
 # 文件存储
-UPLOADTHING_SECRET=""
-UPLOADTHING_TOKEN=""
+UPLOADTHING_SECRET="[YOUR_UPLOADTHING_SECRET]"
+UPLOADTHING_TOKEN="[YOUR_UPLOADTHING_TOKEN]"
 
 # 监控 (可选)
-SENTRY_DSN=""
-POSTHOG_KEY=""
+SENTRY_DSN="[YOUR_SENTRY_DSN]"
+POSTHOG_KEY="[YOUR_POSTHOG_KEY]"
 ```
 
 ## 🗄 数据库设计与初始化
@@ -100,12 +100,12 @@ model User {
   emailVerified DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   // 关联
   accounts      Account[]
   sessions      Session[]
   images        GeneratedImage[]
-  
+
   @@map("users")
 }
 
@@ -113,30 +113,30 @@ model GeneratedImage {
   id              String   @id @default(cuid())
   userId          String?
   user            User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   // 图片信息
   originalUrl     String
   processedUrl    String
   thumbnailUrl    String?
-  
+
   // 处理参数
   style           String   @default("classic") // classic|exaggerated|minimal
   intensity       Int      @default(2)         // 1-3
   styleVersion    String   @default("v2.1.3")
-  
+
   // 统计数据
   viewCount       Int      @default(0)
   shareCount      Int      @default(0)
   downloadCount   Int      @default(0)
-  
+
   // 技术数据
   processingTime  Float?   // 秒
   fileSize        Int?     // bytes
   ipHash          String?  // 用户IP哈希(匿名统计)
-  
+
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  
+
   @@map("generated_images")
   @@index([userId])
   @@index([createdAt])
@@ -149,7 +149,7 @@ model Translation {
   content     Json     // 翻译内容JSON
   lastUpdated DateTime @default(now())
   isActive    Boolean  @default(true)
-  
+
   @@unique([pagePath, langCode])
   @@map("translations")
 }

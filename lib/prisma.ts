@@ -13,7 +13,12 @@ const isDatabaseConfigured = () => {
   if (!isServerSide) return false
 
   const dbUrl = process.env.DATABASE_URL
-  return dbUrl && dbUrl !== 'postgresql://postgres:password@localhost:5432/sybau_picture'
+  // 检查是否是有效的数据库URL（不是默认的占位符）
+  return dbUrl &&
+         dbUrl.trim() !== '' &&
+         !dbUrl.includes('your-') &&
+         !dbUrl.includes('password@localhost') &&
+         dbUrl.startsWith('postgresql://')
 }
 
 // 创建Prisma客户端，如果数据库未配置或在客户端则返回null
