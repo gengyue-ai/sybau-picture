@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
-import { Upload, Download, Wand2, Sparkles, Loader2, AlertCircle, CheckCircle, X, Type, Image as ImageIcon, LogIn, UserPlus, Crown, Star, Lock, User } from 'lucide-react'
+import { Upload, Download, Wand2, Sparkles, Loader2, AlertCircle, CheckCircle, X, Type, Image as ImageIcon, LogIn, Crown, Star, Lock, User, RotateCcw } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 
@@ -64,54 +64,8 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   const [generationMode, setGenerationMode] = useState<'text-to-image' | 'image-to-image'>('text-to-image')
   const [userPlan, setUserPlan] = useState<{name: string, hasWatermark: boolean} | null>(null)
   const [usage, setUsage] = useState<{current: number, max: number, remaining: number} | null>(null)
+  const [forceRender, setForceRender] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  // 保存用户输入数据到localStorage
-  const saveUserInput = () => {
-    const inputData = {
-      textPrompt,
-      selectedMode,
-      intensity,
-      generationMode,
-      timestamp: Date.now()
-    }
-    localStorage.setItem('sybau_user_input', JSON.stringify(inputData))
-  }
-
-  // 从localStorage恢复用户输入数据
-  const restoreUserInput = () => {
-    try {
-      const savedData = localStorage.getItem('sybau_user_input')
-      if (savedData) {
-        const inputData = JSON.parse(savedData)
-        // 检查数据是否过期（1小时内有效）
-        if (Date.now() - inputData.timestamp < 60 * 60 * 1000) {
-          setTextPrompt(inputData.textPrompt || '')
-          setSelectedMode(inputData.selectedMode || 'classic')
-          setIntensity(inputData.intensity || 3)
-          setGenerationMode(inputData.generationMode || 'text-to-image')
-          // 清除保存的数据
-          localStorage.removeItem('sybau_user_input')
-        }
-      }
-    } catch (error) {
-      console.error('Failed to restore user input:', error)
-    }
-  }
-
-  // 在组件加载时恢复用户输入
-  useEffect(() => {
-    restoreUserInput()
-  }, [])
-
-  // 清理预览URL以防止内存泄漏
-  useEffect(() => {
-    return () => {
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
-      }
-    }
-  }, [previewUrl])
 
   // 获取用户套餐信息
   useEffect(() => {
@@ -132,7 +86,44 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
     fetchUserPlan()
   }, [session])
 
-  // 根据用户套餐定义可用模式 - 只保留3种基础模式
+  // 持久化文件状态，避免登录后丢失
+  useEffect(() => {
+    if (status === 'authenticated' && file && !previewUrl) {
+      // 重新创建预览URL
+      const url = URL.createObjectURL(file)
+      setPreviewUrl(url)
+    }
+  }, [status, file, previewUrl])
+
+  // 在登录状态变化时保持文件状态
+  useEffect(() => {
+    // 当从未认证变为已认证时，保持当前的文件状态
+    if (status === 'authenticated' && previewUrl && file) {
+      console.log('用户登录完成，保持文件状态:', file.name)
+    }
+  }, [status, file, previewUrl])
+
+  // 防止无限加载的超时机制
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (status === 'loading') {
+        console.log('Session loading timeout, forcing render')
+        setForceRender(true)
+      }
+    }, 1000) // 缩短到1秒超时
+
+    return () => clearTimeout(timer)
+  }, [status])
+
+  // 检查是否为开发模式
+  const isDevelopmentMode = () => {
+    if (typeof window !== 'undefined') {
+      return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+    }
+    return false
+  }
+
+  // 三种创作模式
   const allModes = [
     {
       id: 'classic',
@@ -163,10 +154,8 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   // 根据用户套餐过滤可用模式
   const getAvailableModes = () => {
     if (!userPlan) return allModes.filter(mode => mode.requiredPlan === 'free')
-
     const planHierarchy = { 'free': 0, 'standard': 1, 'pro': 2 }
     const userPlanLevel = planHierarchy[userPlan.name as keyof typeof planHierarchy] || 0
-
     return allModes.filter(mode => {
       const requiredLevel = planHierarchy[mode.requiredPlan as keyof typeof planHierarchy]
       return userPlanLevel >= requiredLevel
@@ -177,24 +166,18 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   const lockedModes = allModes.filter(mode => !availableModes.includes(mode))
 
   const handleFileSelect = (selectedFile: File) => {
-    if (selectedFile.size > 5 * 1024 * 1024) { // 5MB limit
+    if (selectedFile.size > 5 * 1024 * 1024) {
       setError('File size must be less than 5MB')
       return
     }
-
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
     if (!allowedTypes.includes(selectedFile.type)) {
       setError('Please select a JPG, PNG, or WebP image')
       return
     }
-
     setFile(selectedFile)
     setError(null)
-
-    // 创建预览URL
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
     const url = URL.createObjectURL(selectedFile)
     setPreviewUrl(url)
   }
@@ -212,29 +195,24 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault()
     setIsDragging(false)
-
     const droppedFile = e.dataTransfer.files[0]
-    if (droppedFile) {
-      handleFileSelect(droppedFile)
-    }
+    if (droppedFile) handleFileSelect(droppedFile)
   }
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0]
-    if (selectedFile) {
-      handleFileSelect(selectedFile)
-    }
+    if (selectedFile) handleFileSelect(selectedFile)
   }
 
   const handleModeSwitch = (mode: 'text-to-image' | 'image-to-image') => {
     setGenerationMode(mode)
     setError(null)
-    // 重置相关状态
     if (mode === 'text-to-image') {
       setFile(null)
-      setPreviewUrl(null)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
+      setPrompt('')
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+        setPreviewUrl(null)
       }
     } else {
       setTextPrompt('')
@@ -242,95 +220,78 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
   }
 
   const handleGenerate = async () => {
-    // 验证输入
+    if (!session) {
+      setError('请先登录使用Google账户开始创作')
+      return
+    }
+
+    if (!usage || usage.remaining <= 0) {
+      setError('Generation limit reached. Please upgrade your plan to continue.')
+      return
+    }
+
     if (generationMode === 'text-to-image') {
       if (!textPrompt.trim()) {
-        setError('Please enter a text prompt to generate an image')
+        setError('Please enter a text prompt')
         return
       }
     } else {
       if (!file) {
-        setError('Please upload an image for image-to-image generation')
+        setError('Please select an image file')
         return
       }
     }
 
-    // 检查用户是否已登录 - 在用户真正要使用功能时才提示
-    if (!session) {
-      // 保存用户输入数据
-      saveUserInput()
-      setError('请先登录账户才能使用AI功能')
-      return
-    }
-
     setIsGenerating(true)
     setError(null)
-    setGeneratedImage(null)
 
     try {
       const formData = new FormData()
+      formData.append('mode', generationMode)
 
       if (generationMode === 'text-to-image') {
         formData.append('prompt', textPrompt)
-        formData.append('generationMode', 'text-to-image')
       } else {
-        if (file) {
-          formData.append('file', file)
-        }
-        formData.append('prompt', prompt || 'Apply Sybau style transformation')
-        formData.append('generationMode', 'image-to-image')
+        formData.append('file', file!)
+        formData.append('prompt', prompt)
       }
 
-      formData.append('mode', selectedMode)
+      formData.append('style', selectedMode)
       formData.append('intensity', intensity.toString())
 
-      console.log('Sending request to /api/generate with:', {
-        generationMode,
-        hasFile: !!file,
-        textPrompt: generationMode === 'text-to-image' ? textPrompt : '',
-        prompt: generationMode === 'image-to-image' ? (prompt || 'Apply Sybau style transformation') : '',
-        mode: selectedMode,
-        intensity: intensity
+      console.log('Sending request to /api/generate')
+      console.log('Form data:', {
+        mode: generationMode,
+        prompt: generationMode === 'text-to-image' ? textPrompt : prompt,
+        hasFile: generationMode === 'image-to-image' ? !!file : false,
+        style: selectedMode,
+        intensity: intensity.toString()
       })
-
-      // 添加超时控制
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 60000) // 60秒超时
 
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: formData,
-        signal: controller.signal
+        body: formData
       })
 
-      clearTimeout(timeoutId)
+      console.log('Response status:', response.status)
+      const data = await response.json()
+      console.log('Response data:', data)
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const result = await response.json()
-      console.log('API response:', result)
-
-      if (result.success) {
-        setGeneratedImage(result.imageUrl)
-      } else {
-        setError(result.error || texts.error)
-      }
-    } catch (err) {
-      console.error('Generation error:', err)
-
-      if (err instanceof Error) {
-        if (err.name === 'AbortError') {
-          setError('Request timeout, please try again')
-        } else if (err.message.includes('fetch')) {
-          setError('Network connection failed, please check your connection and try again')
-        } else {
-          setError(err.message || texts.error)
+      if (response.ok) {
+        setGeneratedImage(data.imageUrl)
+        setError(null)
+        const usageResponse = await fetch('/api/subscription')
+        if (usageResponse.ok) {
+          const usageData = await usageResponse.json()
+          setUsage(usageData.usage)
         }
       } else {
-        setError(texts.error)
+        console.error('API Error:', data)
+        setError(data.error || data.details || 'Failed to generate image')
       }
+    } catch (error) {
+      console.error('Generation error:', error)
+      setError('Generation failed. Please try again.')
     } finally {
       setIsGenerating(false)
     }
@@ -340,7 +301,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
     if (generatedImage) {
       const link = document.createElement('a')
       link.href = generatedImage
-      link.download = `sybau-creation-${Date.now()}.png`
+      link.download = `sybau-generated-${Date.now()}.png`
       link.click()
     }
   }
@@ -351,22 +312,19 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
     setTextPrompt('')
     setGeneratedImage(null)
     setError(null)
-    setIsGenerating(false)
+    setSelectedMode('classic')
+    setIntensity(3)
+    setGenerationMode('text-to-image')
     if (previewUrl) {
       URL.revokeObjectURL(previewUrl)
       setPreviewUrl(null)
     }
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
   }
 
-  const canGenerate = generationMode === 'text-to-image' ? textPrompt.trim() : file
-
-  // 如果正在加载会话，显示加载状态
-  if (status === 'loading') {
+  // 加载状态 - 带超时保护和开发模式检查
+  if (status === 'loading' && !forceRender && !isDevelopmentMode()) {
     return (
-      <div className="max-w-4xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="border-2 border-purple-200 shadow-lg">
           <CardContent className="p-8">
             <div className="flex items-center justify-center space-x-3">
@@ -379,93 +337,149 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
     )
   }
 
-  // 未登录用户显示登录提示，但仍显示完整界面
-  const showLoginPrompt = !session
-
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      {/* Upload/Input Section - 紧凑现代设计 */}
-      <Card className="p-6 bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 border border-purple-200/60 backdrop-blur-sm shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300">
-        <CardHeader className="text-center pb-4">
-          <div className="relative mb-3">
-            <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-              {generationMode === 'text-to-image' ? (
-                <Type className="h-8 w-8 text-white" />
-              ) : (
-                <Upload className="h-8 w-8 text-white" />
-              )}
+      {/* 左侧：创作准备区 */}
+      <Card className="p-4 bg-gradient-to-br from-purple-50/50 via-white to-pink-50/50 border border-purple-200/60 backdrop-blur-sm shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300">
+        <CardHeader className="text-center pb-3">
+          <div className="relative mb-2">
+            <div className="w-10 h-10 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
+              <Wand2 className="h-5 w-5 text-white" />
             </div>
-            {/* 科技感装饰 */}
-            <div className="absolute top-0 right-0 w-3 h-3 bg-cyan-400 rounded-full animate-pulse"></div>
-            <div className="absolute bottom-0 left-0 w-2 h-2 bg-green-400 rounded-full animate-bounce delay-300"></div>
           </div>
-          <CardTitle className="text-xl font-bold bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
-            {texts.uploadTitle}
+          <CardTitle className="text-lg font-bold bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
+            🎨 创作准备
           </CardTitle>
-          <CardDescription className="text-sm text-gray-600">
-            {texts.uploadDescription}
+          <CardDescription className="text-xs text-gray-600">
+            选择创作方式，设置风格，开始您的AI创作之旅
           </CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          {/* Mode Selection - 更紧凑的设计 */}
+        <CardContent className="space-y-3">
+          {/* 创作模式选择 */}
           <div className="space-y-2">
-            <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">Generation Mode</Label>
+            <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider flex items-center">
+              <Type className="w-3 h-3 mr-1" />
+              创作模式
+            </Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
                 variant={generationMode === 'text-to-image' ? "default" : "outline"}
-                className={`p-2 h-auto border transition-all rounded-xl ${
+                className={`p-2 h-auto border transition-all rounded-lg ${
                   generationMode === 'text-to-image'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg scale-105'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-md'
                     : 'border-purple-200 bg-white/80 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeSwitch('text-to-image')}
               >
-                <div className="flex flex-col items-center space-y-1">
-                  <Type className="w-4 h-4" />
-                  <span className="text-xs font-medium">Text</span>
+                <div className="flex items-center space-x-2">
+                  <Type className="w-3 h-3" />
+                  <span className="text-xs font-medium">文字创作</span>
                 </div>
               </Button>
               <Button
                 variant={generationMode === 'image-to-image' ? "default" : "outline"}
-                className={`p-2 h-auto border transition-all rounded-xl ${
+                className={`p-2 h-auto border transition-all rounded-lg ${
                   generationMode === 'image-to-image'
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg scale-105'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-md'
                     : 'border-purple-200 bg-white/80 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
                 }`}
                 onClick={() => handleModeSwitch('image-to-image')}
               >
-                <div className="flex flex-col items-center space-y-1">
-                  <ImageIcon className="w-4 h-4" />
-                  <span className="text-xs font-medium">Image</span>
+                <div className="flex items-center space-x-2">
+                  <ImageIcon className="w-3 h-3" />
+                  <span className="text-xs font-medium">图片创作</span>
                 </div>
               </Button>
             </div>
           </div>
 
-          {/* Conditional Input Based on Mode */}
-          {generationMode === 'text-to-image' ? (
-            /* Text Input for Text-to-Image - 压缩高度 */
-            <div className="space-y-2">
-              <Label htmlFor="textPrompt" className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                {texts.textPromptLabel || 'Text Prompt'}
+          {/* Sybau风格选择 */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider flex items-center">
+                <Crown className="w-3 h-3 mr-1" />
+                Sybau 风格
               </Label>
-              <Textarea
-                id="textPrompt"
-                placeholder={texts.textPromptPlaceholder || 'Describe what you want to create...'}
-                value={textPrompt}
-                onChange={(e) => setTextPrompt(e.target.value)}
-                className="w-full min-h-[80px] resize-none border-purple-200 rounded-xl focus:border-purple-400 focus:ring-purple-400"
-                rows={3}
-              />
-              <p className="text-xs text-gray-500 flex items-center">
-                <Sparkles className="w-3 h-3 mr-1" />
-                Include style, colors, mood, and details for best results
-              </p>
+              {userPlan && (
+                <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-purple-200">
+                  {userPlan.name.toUpperCase()}
+                </Badge>
+              )}
             </div>
-          ) : (
-            /* File Upload for Image-to-Image - 压缩高度 */
-            <>
+            <div className="grid grid-cols-3 gap-2">
+              {availableModes.map((mode) => {
+                const IconComponent = mode.icon
+                return (
+                  <Button
+                    key={mode.id}
+                    variant={selectedMode === mode.id ? "default" : "outline"}
+                    className={`p-2 h-auto text-center border transition-all rounded-lg ${
+                      selectedMode === mode.id
+                        ? `bg-gradient-to-r ${mode.color} text-white border-transparent shadow-md`
+                        : 'border-purple-200 bg-white/80 text-gray-700 hover:border-purple-300 hover:bg-purple-50'
+                    }`}
+                    onClick={() => setSelectedMode(mode.id)}
+                  >
+                    <div className="flex flex-col items-center space-y-1">
+                      <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
+                        selectedMode === mode.id ? 'bg-white/20' : 'bg-purple-100'
+                      }`}>
+                        <IconComponent className={`w-3 h-3 ${
+                          selectedMode === mode.id ? 'text-white' : 'text-purple-600'
+                        }`} />
+                      </div>
+                      <span className="text-xs font-medium leading-tight">{mode.name.replace('Sybau', '').trim()}</span>
+                    </div>
+                  </Button>
+                )
+              })}
+              {/* 锁定的模式 */}
+              {!session && lockedModes.map((mode) => {
+                const IconComponent = mode.icon
+                return (
+                  <Button
+                    key={mode.id}
+                    variant="outline"
+                    disabled
+                    className="p-2 h-auto text-center border border-purple-200 bg-gray-50 text-gray-400 rounded-lg opacity-60"
+                  >
+                    <div className="flex flex-col items-center space-y-1 relative">
+                      <div className="w-5 h-5 rounded-md flex items-center justify-center bg-gray-100">
+                        <IconComponent className="w-3 h-3 text-gray-400" />
+                      </div>
+                      <span className="text-xs font-medium leading-tight">{mode.name.replace('Sybau', '').trim()}</span>
+                      <Lock className="w-2 h-2 absolute top-0 right-0 text-gray-400" />
+                    </div>
+                  </Button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* 输入区域 */}
+          <div className="space-y-2">
+            <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider flex items-center">
+              <Upload className="w-3 h-3 mr-1" />
+              {generationMode === 'text-to-image' ? '文字描述' : '图片上传'}
+            </Label>
+
+            {generationMode === 'text-to-image' ? (
+              <div className="space-y-1">
+                <Textarea
+                  id="textPrompt"
+                  placeholder="详细描述您想要创作的图片，包含风格、颜色、情绪和细节..."
+                  value={textPrompt}
+                  onChange={(e) => setTextPrompt(e.target.value)}
+                  className="w-full min-h-[60px] resize-none border-purple-200 rounded-lg focus:border-purple-400 focus:ring-purple-400 text-sm"
+                  rows={2}
+                />
+                <p className="text-xs text-gray-500 flex items-center">
+                  <Sparkles className="w-3 h-3 mr-1" />
+                  详细的描述能帮助AI生成更好的作品
+                </p>
+              </div>
+            ) : (
               <div
                 className={`border-2 border-dashed rounded-xl p-4 text-center bg-white/60 backdrop-blur-sm transition-all cursor-pointer group ${
                   isDragging ? 'border-purple-400 bg-purple-50 scale-105' : 'border-purple-200 hover:border-purple-300'
@@ -484,12 +498,12 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 />
 
                 {file && previewUrl ? (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <div className="relative">
                       <img
                         src={previewUrl}
                         alt="Preview"
-                        className="w-full h-32 object-cover rounded-lg shadow-md"
+                        className="w-full h-24 object-cover rounded-lg shadow-md"
                       />
                       <div className="absolute top-1 right-1">
                         <Button
@@ -499,7 +513,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                             e.stopPropagation()
                             resetGenerator()
                           }}
-                          className="h-6 w-6 p-0 bg-white/90 backdrop-blur-sm border-gray-300"
+                          className="h-6 w-6 p-0 bg-white/90 backdrop-blur-sm border-gray-300 rounded-full"
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -511,270 +525,173 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 py-2">
+                  <div className="space-y-2 py-4">
                     <div className="relative">
-                      <Upload className="h-10 w-10 text-purple-400 mx-auto group-hover:scale-110 transition-transform" />
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-400 rounded-full animate-ping"></div>
+                      <Upload className="h-8 w-8 text-purple-400 mx-auto group-hover:scale-110 transition-transform" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-700">{texts.dragAndDrop}</p>
-                      <p className="text-xs text-gray-500">{texts.clickToBrowse}</p>
+                      <p className="text-sm font-medium text-gray-700">拖拽图片到这里</p>
+                      <p className="text-xs text-gray-500">或点击选择文件</p>
                       <p className="text-xs text-gray-400 flex items-center justify-center">
                         <ImageIcon className="w-3 h-3 mr-1" />
-                        JPG, PNG, WebP • Max 5MB
+                        支持 JPG, PNG, WebP • 最大 5MB
                       </p>
                     </div>
                   </div>
                 )}
               </div>
+            )}
 
-              {/* Style Prompt for Image-to-Image */}
-              <div className="space-y-2">
-                <Label htmlFor="prompt" className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                  Style Enhancement
-                </Label>
+            {/* 图片模式的风格增强输入 */}
+            {generationMode === 'image-to-image' && (
+              <div className="space-y-1">
                 <Input
                   id="prompt"
                   type="text"
-                  placeholder="Optional: Describe desired style changes..."
+                  placeholder="可选：描述想要的风格变化..."
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full border-purple-200 rounded-xl focus:border-purple-400"
+                  className="w-full border-purple-200 rounded-lg focus:border-purple-400 text-sm h-8"
                 />
-              </div>
-            </>
-          )}
-
-          {/* Error Display - 紧凑的错误提示 */}
-          {error && (
-            <div className={`p-3 rounded-xl border ${
-              error.includes('请先登录')
-                ? 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200'
-                : 'bg-red-50 border-red-200'
-            }`}>
-              {error.includes('请先登录') ? (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
-                      <User className="w-3 h-3 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-gray-800">🎨 登录开始创作</div>
-                      <div className="text-xs text-gray-600">输入已保存，登录后自动恢复</div>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Link href="/auth/signin" className="flex-1">
-                      <Button size="sm" variant="outline" className="w-full h-8 text-xs border-purple-300 text-purple-700">
-                        登录
-                      </Button>
-                    </Link>
-                    <Link href="/auth/signup" className="flex-1">
-                      <Button size="sm" className="w-full h-8 text-xs bg-gradient-to-r from-purple-600 to-pink-600">
-                        注册
-                      </Button>
-                    </Link>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center space-x-2 text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  <span className="text-sm">{error}</span>
-                </div>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Settings & Results Section - 紧凑现代设计 */}
-      <Card className="p-6 bg-gradient-to-br from-cyan-50/50 via-white to-blue-50/50 border border-cyan-200/60 backdrop-blur-sm shadow-xl rounded-2xl hover:shadow-2xl transition-all duration-300">
-        <CardHeader className="text-center pb-4">
-          <div className="relative mb-3">
-            <div className="w-16 h-16 bg-gradient-to-r from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center mx-auto shadow-lg">
-              <Wand2 className="h-8 w-8 text-white" />
-            </div>
-            {/* 科技感装饰 */}
-            <div className="absolute top-0 left-0 w-3 h-3 bg-purple-400 rounded-full animate-pulse delay-150"></div>
-            <div className="absolute bottom-0 right-0 w-2 h-2 bg-pink-400 rounded-full animate-bounce delay-500"></div>
-          </div>
-          <CardTitle className="text-xl font-bold bg-gradient-to-r from-cyan-700 to-blue-600 bg-clip-text text-transparent">
-            {texts.settingsTitle}
-          </CardTitle>
-          <CardDescription className="text-sm text-gray-600">
-            {texts.settingsDescription}
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="space-y-4">
-          {/* User Plan and Usage Info - 更紧凑 */}
-          {session && userPlan && usage && (
-            <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-3 rounded-xl border border-purple-200/60">
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center space-x-2">
-                  {userPlan.name === 'pro' ? (
-                    <Crown className="w-4 h-4 text-amber-500" />
-                  ) : userPlan.name === 'standard' ? (
-                    <Star className="w-4 h-4 text-blue-500" />
-                  ) : (
-                    <Sparkles className="w-4 h-4 text-purple-500" />
-                  )}
-                  <span className="text-sm font-medium text-gray-800 capitalize">{userPlan.name}</span>
-                </div>
-                <Link href="/pricing" className="text-xs text-purple-600 hover:underline">
-                  升级
-                </Link>
-              </div>
-              <div className="flex items-center justify-between text-xs text-gray-600">
-                <span>使用: {usage.current}/{usage.max}</span>
-                <span className={`px-2 py-0.5 rounded text-xs ${
-                  usage.remaining > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                }`}>
-                  剩余 {usage.remaining}
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Mode Selection - 更紧凑的风格选择 */}
-          <div>
-            <Label className="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">
-              AI Style Mode
-            </Label>
-            <div className="grid grid-cols-1 gap-2">
-              {allModes.map((mode) => {
-                const Icon = mode.icon
-                const isAvailable = availableModes.includes(mode)
-                const isFree = mode.requiredPlan === 'free'
-                return (
-                  <Button
-                    key={mode.id}
-                    variant={selectedMode === mode.id ? "default" : "outline"}
-                    className={`p-3 h-auto border transition-all rounded-xl ${
-                      selectedMode === mode.id
-                        ? `bg-gradient-to-r ${mode.color} text-white border-transparent shadow-lg scale-105`
-                        : 'border-cyan-200 bg-white/80 text-gray-700 hover:border-cyan-300 hover:bg-cyan-50'
-                    }`}
-                    onClick={() => setSelectedMode(mode.id)}
-                  >
-                    <div className="flex items-center space-x-2 w-full">
-                      <Icon className="w-4 h-4" />
-                      <div className="text-left flex-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="text-sm font-medium">{mode.name}</span>
-                          {isFree && (
-                            <span className="text-xs px-1.5 py-0.5 bg-green-100 text-green-700 rounded-full font-medium">
-                              Free
-                            </span>
-                          )}
-                        </div>
-                        <div className={`text-xs ${selectedMode === mode.id ? 'text-white/80' : 'text-gray-500'}`}>
-                          {mode.description}
-                        </div>
-                      </div>
-                    </div>
-                  </Button>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Intensity Slider - 更紧凑 */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                Style Intensity
-              </Label>
-              <span className="text-xs font-bold text-cyan-600 bg-cyan-100 px-2 py-1 rounded-full">
-                {intensity}/5
-              </span>
-            </div>
-            <div className="space-y-2">
-              <input
-                type="range"
-                min="1"
-                max="5"
-                value={intensity}
-                onChange={(e) => setIntensity(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-modern"
-                style={{
-                  background: `linear-gradient(to right, #06b6d4 0%, #06b6d4 ${((intensity - 1) / 4) * 100}%, #e5e7eb ${((intensity - 1) / 4) * 100}%, #e5e7eb 100%)`
-                }}
-              />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>Subtle</span>
-                <span>Strong</span>
-                <span>Extreme</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Generate Button - 更紧凑但突出 */}
-          <div className="space-y-2">
-            <Button
-              onClick={handleGenerate}
-              disabled={isGenerating}
-              className="w-full bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white py-3 text-base font-bold rounded-xl disabled:opacity-50 transition-all hover:shadow-xl hover:scale-105 transform relative overflow-hidden group"
-            >
-              {/* 动态背景效果 */}
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
-
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                  AI创作中...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5 mr-2 animate-pulse" />
-                  {session ? '🚀 生成创作' : '🎨 免费体验'}
-                </>
-              )}
-            </Button>
-
-            {/* 未登录用户的引导提示 */}
-            {!session && (
-              <div className="text-center space-y-1">
-                <div className="flex items-center justify-center space-x-1 text-xs text-purple-600">
-                  <Sparkles className="w-3 h-3" />
-                  <span className="font-medium">每月1张免费创作</span>
-                  <Sparkles className="w-3 h-3" />
-                </div>
-                <p className="text-xs text-gray-500">
-                  体验更多功能请升级套餐
-                </p>
               </div>
             )}
           </div>
 
-          {/* Generated Image Display - 更紧凑 */}
-          {generatedImage && (
-            <div className="space-y-3">
-              <div className="bg-white rounded-xl p-3 border border-green-200 shadow-md">
-                <img
-                  src={generatedImage}
-                  alt="Generated Sybau creation"
-                  className="w-full h-auto rounded-lg shadow-sm"
-                />
-                <div className="mt-2 flex justify-between items-center">
-                  <div className="flex items-center space-x-1">
-                    <Badge className={`bg-gradient-to-r ${allModes.find(m => m.id === selectedMode)?.color} text-white text-xs`}>
-                      {allModes.find(m => m.id === selectedMode)?.name}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs">
-                      {generationMode === 'text-to-image' ? 'Text→AI' : 'Image→AI'}
-                    </Badge>
+
+
+          {/* 错误提示 */}
+          {error && !error.includes('请先登录') && (
+            <div className="p-3 rounded-xl border-2 bg-red-50 border-red-200">
+              <div className="flex items-center space-x-2">
+                <AlertCircle className="w-4 h-4 text-red-600" />
+                <span className="text-sm text-red-700">{error}</span>
+              </div>
+            </div>
+          )}
+
+          {/* 生成按钮 */}
+          <div className="pt-2">
+            {!session ? (
+              <Link href="/auth/signin" className="block">
+                <Button className="w-full h-10 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <LogIn className="w-4 h-4" />
+                    <span>🚀 立即登录开始创作</span>
                   </div>
-                  <span className="text-xs text-gray-500">Level {intensity}</span>
+                </Button>
+              </Link>
+            ) : (
+              <Button
+                onClick={handleGenerate}
+                disabled={
+                  isGenerating ||
+                  (generationMode === 'text-to-image' && !textPrompt.trim()) ||
+                  (generationMode === 'image-to-image' && !file)
+                }
+                className="w-full h-10 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+              >
+                {isGenerating ? (
+                  <div className="flex items-center space-x-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>AI正在创作中...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <Sparkles className="w-4 h-4" />
+                    <span>🚀 开始AI创作</span>
+                  </div>
+                )}
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* 右侧：结果展示区 */}
+      <Card className="p-6 bg-gradient-to-br from-white via-purple-50/30 to-pink-50/30 border border-purple-200/60 backdrop-blur-sm shadow-xl rounded-2xl">
+        <CardHeader className="text-center pb-4">
+          <div className="relative mb-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-pink-600 to-purple-600 rounded-xl flex items-center justify-center mx-auto shadow-lg">
+              <Sparkles className="h-6 w-6 text-white" />
+            </div>
+          </div>
+          <CardTitle className="text-xl font-bold bg-gradient-to-r from-pink-700 to-purple-600 bg-clip-text text-transparent">
+            ✨ 创作结果
+          </CardTitle>
+          <CardDescription className="text-sm text-gray-600">
+            您的AI创作将在这里精彩呈现
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          {isGenerating ? (
+            <div className="flex flex-col items-center justify-center py-16 space-y-6">
+              <div className="relative">
+                <div className="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Sparkles className="w-8 h-8 text-purple-600 animate-pulse" />
                 </div>
               </div>
-              <Button
-                onClick={handleDownload}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-2.5 text-sm font-semibold rounded-xl transition-all hover:shadow-lg"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                {texts.downloadButton}
-              </Button>
+              <div className="text-center space-y-2">
+                <p className="text-xl font-semibold text-gray-700">AI正在创作中...</p>
+                <p className="text-sm text-gray-500">请稍候，预计需要15-30秒</p>
+                <div className="w-48 bg-purple-100 rounded-full h-2 mx-auto">
+                  <div className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
+                </div>
+              </div>
+            </div>
+          ) : generatedImage ? (
+            <div className="space-y-4">
+              <div className="relative group">
+                <img
+                  src={generatedImage}
+                  alt="AI Generated"
+                  className="w-full h-auto rounded-2xl shadow-2xl group-hover:shadow-3xl transition-shadow duration-300 border border-purple-100"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl"></div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Button
+                  onClick={handleDownload}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 h-11"
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  下载图片
+                </Button>
+                <Button
+                  onClick={resetGenerator}
+                  variant="outline"
+                  className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50 rounded-xl h-11"
+                >
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  重新创作
+                </Button>
+              </div>
+              <div className="text-center pt-2">
+                <p className="text-xs text-gray-500">🎉 创作完成！您可以下载图片或重新创作</p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 space-y-6">
+              <div className="relative">
+                <div className="w-24 h-24 bg-gradient-to-r from-purple-100 to-pink-100 rounded-3xl flex items-center justify-center">
+                  <ImageIcon className="w-10 h-10 text-purple-400" />
+                </div>
+                <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-xl font-semibold text-gray-700">准备创作</p>
+                <p className="text-sm text-gray-500">在左侧完成设置后，AI将为您生成精美作品</p>
+              </div>
+              <div className="w-full max-w-xs">
+                <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-full p-1">
+                  <div className="bg-white rounded-full py-2 px-4 text-center">
+                    <span className="text-sm font-medium text-gray-600">等待您的创作指令...</span>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </CardContent>

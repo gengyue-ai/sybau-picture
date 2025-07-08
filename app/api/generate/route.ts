@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth/next'
 import { authOptions } from '@/lib/auth'
+import { prisma } from '@/lib/prisma'
+import { appConfig, isDevelopment, isMockMode } from '@/lib/env-manager'
+import { mockImageGeneration, MockDatabase } from '@/lib/mock-services'
 import {
   getCurrentUserWithSubscription,
   canUserGenerateImage,
@@ -11,7 +14,12 @@ import {
 // 配置 Fal AI 客户端的函数
 async function configureFalClient() {
   const fal = await import('@fal-ai/serverless-client')
-  const falKey = process.env.FAL_KEY || '71163de2-482a-46e5-821c-ccef71f7caae:2cec66a501188bdb77c78e85191693ba'
+  const falKey = process.env.FAL_KEY
+
+  if (!falKey) {
+    throw new Error('FAL_KEY environment variable is required')
+  }
+
   console.log('Using Fal API Key:', falKey.substring(0, 10) + '...')
 
   fal.config({
@@ -41,12 +49,15 @@ export async function POST(request: NextRequest) {
     // 获取用户信息
     const user = await getCurrentUserWithSubscription()
     if (!user) {
+      console.error('User not found for session:', session?.user?.email)
       return NextResponse.json({
         success: false,
         error: 'User not found',
         code: 'USER_NOT_FOUND'
       }, { status: 404 })
     }
+
+    console.log('User found:', user.email)
 
     // 检查用户是否可以生成图片
     const usageCheck = await canUserGenerateImage(user.id)
@@ -66,30 +77,43 @@ export async function POST(request: NextRequest) {
 
     let prompt = ''
     let imageUrl = ''
+    let mode = 'text-to-image'
 
     if (contentType?.includes('multipart/form-data')) {
       // 处理文件上传
       const formData = await request.formData()
       const file = formData.get('file') as File
       const promptText = formData.get('prompt') as string
+      mode = formData.get('mode') as string || 'text-to-image'
 
+      console.log('Mode:', mode)
       console.log('File uploaded:', file?.name, file?.size)
+      console.log('Prompt text:', promptText)
 
-      if (file) {
+      if (mode === 'image-to-image') {
+        if (!file) {
+          throw new Error('File is required for image-to-image mode')
+        }
         // 将文件转换为 base64 URL
         const bytes = await file.arrayBuffer()
         const buffer = Buffer.from(bytes)
         const base64 = buffer.toString('base64')
         imageUrl = `data:${file.type};base64,${base64}`
         console.log('Image converted to base64, length:', base64.length)
+        prompt = promptText || 'Transform this image into a Sybau style meme'
+      } else {
+        // text-to-image mode
+        prompt = promptText || 'Create a Sybau style image'
+        if (!prompt.trim()) {
+          throw new Error('Prompt is required for text-to-image mode')
+        }
       }
-
-      prompt = promptText || 'Transform this image into a Sybau style meme'
     } else {
       // 处理 JSON 请求
       const body = await request.json()
       prompt = body.prompt || 'Create a Sybau style image'
       imageUrl = body.image_url || ''
+      mode = body.mode || 'text-to-image'
     }
 
     console.log('Prompt:', prompt)
@@ -121,20 +145,29 @@ export async function POST(request: NextRequest) {
     console.log('Using model:', model)
     console.log('Input parameters:', JSON.stringify({...input, image_url: imageUrl ? '[base64 data]' : undefined}, null, 2))
 
-    // 调用 Fal AI API
-    console.log('Calling Fal AI API...')
-    const result = await fal.subscribe(model, {
-      input,
-      logs: true,
-      onQueueUpdate: (update) => {
-        console.log('Queue update:', update)
+    let apiResult: { images?: Array<{ url: string }> }
+
+    // 根据配置选择真实API或模拟
+    if (isMockMode) {
+      console.log('🎭 使用模拟AI服务...')
+      const mockResult = await mockImageGeneration(prompt, imageUrl)
+      apiResult = {
+        images: [{ url: mockResult.imageUrl }]
       }
-    })
+      console.log('Mock AI result:', mockResult)
+    } else {
+      console.log('🚀 调用真实Fal AI API...')
+      const result = await fal.subscribe(model, {
+        input,
+        logs: true,
+        onQueueUpdate: (update) => {
+          console.log('Queue update:', update)
+        }
+      })
 
-    console.log('Fal AI API result:', JSON.stringify(result, null, 2))
-
-    // 类型断言，确保result有正确的结构
-    const apiResult = result as { images?: Array<{ url: string }> }
+      console.log('Fal AI API result:', JSON.stringify(result, null, 2))
+      apiResult = result as { images?: Array<{ url: string }> }
+    }
 
     if (apiResult.images && apiResult.images.length > 0) {
       console.log('✅ Image generated successfully!')
@@ -142,6 +175,53 @@ export async function POST(request: NextRequest) {
       // 记录用户使用情况
       await recordImageGeneration(user.id)
       console.log(`Recorded image generation for user ${user.email}`)
+
+      // 保存生成的图片到数据库（如果数据库可用）
+      if (appConfig.database.url && prisma) {
+        try {
+          await prisma.generatedImage.create({
+            data: {
+              userId: user.id,
+              originalUrl: imageUrl || apiResult.images[0].url, // 原图或生成图
+              processedUrl: apiResult.images[0].url, // 处理后的图片
+              thumbnailUrl: apiResult.images[0].url, // 缩略图URL相同
+              style: 'classic', // 默认风格
+              intensity: 2, // 默认强度
+              metadata: JSON.stringify({
+                mode: mode,
+                prompt: prompt,
+                model: model,
+                apiProvider: isMockMode ? 'mock-ai' : 'fal-ai',
+                hasInputImage: !!imageUrl,
+                mockGenerated: isMockMode
+              })
+            }
+          })
+          console.log('✅ 图片已保存到数据库')
+        } catch (dbError) {
+          console.error('❌ 保存图片到数据库失败:', dbError)
+          // 不影响主要流程，继续返回结果
+        }
+      } else if (isMockMode) {
+        // 在模拟模式下使用MockDatabase
+        try {
+          await MockDatabase.save('generated_images', `img-${Date.now()}`, {
+            userId: user.id,
+            originalUrl: imageUrl || apiResult.images[0].url,
+            processedUrl: apiResult.images[0].url,
+            thumbnailUrl: apiResult.images[0].url,
+            style: 'classic',
+            intensity: 2,
+            prompt: prompt,
+            mode: mode,
+            model: model,
+            mockGenerated: true
+          })
+          console.log('🎭 图片已保存到模拟数据库')
+        } catch (mockError) {
+          console.error('❌ 保存图片到模拟数据库失败:', mockError)
+        }
+      }
 
       // 获取用户套餐特性以确定是否应该有水印
       const planFeatures = await getUserPlanFeatures(user.id)
@@ -159,7 +239,7 @@ export async function POST(request: NextRequest) {
         }
       })
     } else {
-      console.log('❌ No images in result:', result)
+      console.log('❌ No images in result:', apiResult)
       throw new Error('No images generated - API returned empty result')
     }
 

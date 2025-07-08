@@ -1,12 +1,12 @@
 import { NextAuthOptions } from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import { prisma } from '@/lib/prisma'
+import { getEnvironmentConfig, isMockMode } from '@/lib/env-manager'
+import { mockGoogleAuth } from '@/lib/mock-services'
 
-// Google OAuth配置检查 - 开发环境使用默认配置
-const isGoogleOAuthConfigured = () => {
-  // 在开发环境中总是返回true，使用测试配置
-  return true
-}
+// 获取当前环境配置
+const envConfig = getEnvironmentConfig()
 
 export const authOptions: NextAuthOptions = {
   // 使用JWT策略，更适合生产环境
@@ -15,13 +15,38 @@ export const authOptions: NextAuthOptions = {
     maxAge: 7 * 24 * 60 * 60, // 7天
   },
 
-  providers: [
+  providers: isMockMode ? [
+    // 模拟模式：使用模拟认证
+    CredentialsProvider({
+      id: 'mock-google',
+      name: 'Mock Google',
+      credentials: {
+        email: { label: "邮箱", type: "email", placeholder: "test@example.com" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email) return null
+
+        console.log('🎭 模拟Google登录:', credentials.email)
+
+        // 使用模拟认证
+        const mockAuth = mockGoogleAuth(credentials.email)
+
+        return {
+          id: mockAuth.user.id,
+          email: mockAuth.user.email,
+          name: mockAuth.user.name,
+          image: mockAuth.user.image,
+        }
+      }
+    })
+  ] : [
+    // 生产模式：使用真实的Google OAuth
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "test-client-id",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "test-client-secret",
+      clientId: envConfig.auth.clientId,
+      clientSecret: envConfig.auth.clientSecret,
       authorization: {
         params: {
-          prompt: "consent",
+          prompt: "select_account",
           access_type: "offline",
           response_type: "code"
         }
@@ -65,18 +90,26 @@ export const authOptions: NextAuthOptions = {
         session.user.email = token.email as string
         session.user.name = token.name as string
         session.user.image = token.image as string
-        (session.user as any).provider = token.provider || 'google'
+        (session.user as any).provider = token.provider || (isMockMode ? 'mock-google' : 'google')
       }
       return session
     },
 
     signIn: async ({ user, account, profile }) => {
-      console.log('Google登录回调:', {
+      console.log('登录回调:', {
         userId: user.id,
         email: user.email,
-        provider: account?.provider
+        provider: account?.provider,
+        mockMode: isMockMode
       })
 
+      // 模拟模式：跳过数据库操作
+      if (isMockMode) {
+        console.log('🎭 模拟模式登录成功:', user.email)
+        return true
+      }
+
+      // 生产模式：正常的Google OAuth处理
       if (account?.provider === 'google' && profile) {
         try {
           if (!prisma) {
@@ -158,51 +191,54 @@ export const authOptions: NextAuthOptions = {
     },
 
     redirect: async ({ url, baseUrl }) => {
-      console.log('重定向回调:', { url, baseUrl })
+      console.log('重定向回调:', { url, baseUrl, mockMode: isMockMode })
 
-      // 强制将baseUrl设为本地地址（在开发环境中）
-      const localBaseUrl = process.env.NODE_ENV === 'development'
-        ? 'http://localhost:3001'
-        : baseUrl
+      // 使用环境管理器的baseUrl
+      const localBaseUrl = envConfig.baseUrl
 
       // 强制阻止跳转到NextAuth内置页面
       if (url.includes('/api/auth/signin') ||
           url.includes('/api/auth/signout') ||
           url.includes('oauth') ||
           url.includes('providers') ||
-          url.includes('csrf') ||
-          url.includes('error')) {
-        console.log('强制重定向到自定义登录页面')
-        return `${localBaseUrl}/auth/signin`
+          url.includes('csrf')) {
+        console.log('阻止跳转到内置页面，重定向到首页')
+        return localBaseUrl
       }
 
-      // 处理登录成功后的重定向
+      // 如果是相对路径，返回本地baseUrl + 路径
       if (url.startsWith('/')) {
-        const fullUrl = `${localBaseUrl}${url}`
-        console.log('处理相对路径重定向:', fullUrl)
-        return fullUrl
+        const redirectUrl = localBaseUrl + url
+        console.log('重定向到:', redirectUrl)
+        return redirectUrl
       }
 
+      // 确保只能重定向到同域名下
       if (url.startsWith(localBaseUrl)) {
-        console.log('处理绝对路径重定向:', url)
+        console.log('同域名重定向:', url)
         return url
       }
 
+      // 默认重定向到首页
       console.log('默认重定向到首页')
       return localBaseUrl
-    },
+    }
   },
 
   events: {
-    signIn: async ({ user, account, profile, isNewUser }) => {
-      const provider = account?.provider || 'google'
-      console.log(`✅ 用户登录成功: ${user.email} (${provider})${isNewUser ? ' - 新用户' : ''}`)
+    signIn: async ({ user, account, profile }) => {
+      const provider = account?.provider || (isMockMode ? 'mock-google' : 'google')
+      const mode = isMockMode ? ' (模拟模式)' : ''
+      console.log(`👋 用户登录成功${mode}:`, user.email, `via ${provider}`)
     },
-    signOut: async ({ session, token }) => {
-      console.log(`👋 用户登出`)
-    },
+
+    signOut: async ({ token }) => {
+      console.log(`👋 用户登出${isMockMode ? ' (模拟模式)' : ''}`)
+    }
   },
 
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development'
+  secret: envConfig.auth.secret,
+
+  // 调试信息
+  debug: envConfig.debug,
 }

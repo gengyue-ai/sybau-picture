@@ -183,34 +183,50 @@ export default function Navbar() {
             ) : session?.user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    {session.user.image ? (
-                      <img
-                        src={session.user.image}
-                        alt={session.user.name || session.user.email || 'User'}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium">
-                        {getUserInitials(session.user.name, session.user.email || '')}
-                      </div>
-                    )}
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0 border-0 hover:bg-transparent">
+                    <div className="h-10 w-10 rounded-full overflow-hidden border-2 border-gray-200 hover:border-gray-300 transition-colors">
+                      {session.user.image ? (
+                        <img
+                          src={session.user.image}
+                          alt={session.user.name || session.user.email || 'User'}
+                          className="h-full w-full object-cover"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '50%',
+                            display: 'block'
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium text-sm">
+                          {getUserInitials(session.user.name, session.user.email || '')}
+                        </div>
+                      )}
+                    </div>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-72" align="end" forceMount>
                   {/* User Info */}
                   <div className="flex items-center space-x-3 p-3">
-                    {session.user.image ? (
-                      <img
-                        src={session.user.image}
-                        alt={session.user.name || session.user.email || 'User'}
-                        className="h-12 w-12 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium text-lg">
-                        {getUserInitials(session.user.name, session.user.email || '')}
-                      </div>
-                    )}
+                    <div className="h-12 w-12 rounded-full overflow-hidden border-2 border-gray-200">
+                      {session.user.image ? (
+                        <img
+                          src={session.user.image}
+                          alt={session.user.name || session.user.email || 'User'}
+                          className="h-full w-full object-cover"
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            borderRadius: '50%',
+                            display: 'block'
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full w-full rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center text-white font-medium text-lg">
+                          {getUserInitials(session.user.name, session.user.email || '')}
+                        </div>
+                      )}
+                    </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">
                         {session.user.name || session.user.email?.split('@')[0]}
@@ -279,9 +295,8 @@ export default function Navbar() {
                 size="sm"
                 onClick={() => {
                   console.log('登录按钮被点击')
-                  const targetPath = getNavLink('/auth/signin')
-                  console.log('跳转目标:', targetPath)
-                  router.push(targetPath)
+                  // 直接跳转到Google OAuth登录
+                  window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(getNavLink('/'))}`
                 }}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0 flex items-center space-x-2"
               >
@@ -320,16 +335,17 @@ export default function Navbar() {
               {/* Mobile Auth */}
               {!session?.user && (
                 <div className="border-t pt-2 mt-2">
-                  <Link
-                    href={getNavLink('/auth/signin')}
-                    className="block px-3 py-2 text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-md transition-colors font-medium text-center"
+                  <button
+                    className="w-full px-3 py-2 text-white bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 rounded-md transition-colors font-medium text-center"
                     onClick={() => {
-                      console.log('移动端登录链接被点击')
+                      console.log('移动端登录按钮被点击')
                       setIsMenuOpen(false)
+                      // 直接跳转到Google OAuth登录
+                      window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(getNavLink('/'))}`
                     }}
                   >
                     {t.signIn}
-                  </Link>
+                  </button>
                 </div>
               )}
             </div>

@@ -15,7 +15,7 @@ const staticTexts = {
     'home.hero.tagline': 'in Seconds',
     'home.hero.description': 'Transform any text or image into stunning creative visuals with our AI technology! Experience the Sybau culture - Stay Young, Beautiful and Unique!',
     'home.benefits.free': '100% Free',
-    'home.benefits.noRegistration': 'No Registration',
+    'home.benefits.noRegistration': 'Google登录',
     'home.benefits.hdQuality': 'HD Quality',
     'home.benefits.fastProcessing': '8s Processing',
     'home.socialProof': 'Trusted by creators worldwide',
@@ -91,9 +91,9 @@ const staticTexts = {
     'home.cta.description': 'Join millions of creators who are already embracing the Sybau lifestyle. Stay Young, Beautiful and Unique with our AI-powered creative platform!',
     'home.cta.startCreating': 'Start Creating Now',
     'home.cta.getStarted': 'Get Started',
-    'home.cta.signUp': 'Sign Up Now',
+    'home.cta.signUp': 'Sign In Now',
     'home.cta.choosePlan': 'Choose Plan',
-    'home.footer.features': 'Sybau Picture supports JPG, PNG, WebP formats and text prompts • No registration required • 100% free to use',
+    'home.footer.features': 'Sybau Picture supports JPG, PNG, WebP formats and text prompts • Google Login • 100% secure',
     'home.footer.secure': 'Secure Processing',
     'home.footer.speed': '8-Second Generation',
     'home.footer.community': 'Global Community',
@@ -215,9 +215,9 @@ const staticTexts = {
     'home.cta.description': '加入已经拥抱Sybau生活方式的数百万创作者。通过我们的AI驱动创意平台 Stay Young, Beautiful and Unique！',
     'home.cta.startCreating': '立即开始创作',
     'home.cta.getStarted': '开始使用',
-    'home.cta.signUp': '立即注册',
+    'home.cta.signUp': '立即登录',
     'home.cta.choosePlan': '选择套餐',
-    'home.footer.features': 'Sybau Picture支持JPG、PNG、WebP格式和文本提示 • 无需注册 • 100%免费使用',
+    'home.footer.features': 'Sybau Picture支持JPG、PNG、WebP格式和文本提示 • Google登录 • 100%安全',
     'home.footer.secure': '安全处理',
     'home.footer.speed': '8秒生成',
     'home.footer.community': '全球社区',
@@ -324,7 +324,7 @@ export default function HomePageClient() {
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {[
                 { icon: <Star className="w-5 h-5" />, text: getText('home.benefits.free', '100% Free') },
-                { icon: <Rocket className="w-5 h-5" />, text: getText('home.benefits.noRegistration', 'No Registration') },
+                { icon: <Rocket className="w-5 h-5" />, text: getText('home.benefits.noRegistration', 'Google登录') },
                 { icon: <Heart className="w-5 h-5" />, text: getText('home.benefits.hdQuality', 'HD Quality') },
                 { icon: <TrendingUp className="w-5 h-5" />, text: getText('home.benefits.fastProcessing', '8s Processing') }
               ].map((benefit, index) => (
@@ -365,10 +365,10 @@ export default function HomePageClient() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-800">
-              {getText('generator.uploadTitle', 'Upload Image or Enter Text')}
+              🎨 AI创作工作台
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              {getText('generator.uploadDescription', 'Drag and drop an image or enter creative text')}
+              选择创作方式，设置风格，让AI为您创造精美作品
             </p>
           </div>
 
@@ -684,7 +684,7 @@ export default function HomePageClient() {
                 size="lg"
                 onClick={() => handlePlanClick('standard')}
               >
-                {getText('home.cta.signUp', 'Sign Up Now')}
+                {getText('home.cta.signUp', 'Sign In Now')}
               </Button>
             </div>
 
@@ -756,7 +756,7 @@ export default function HomePageClient() {
             </div>
 
             <p className="text-sm text-white/60">
-              {getText('home.footer.features', 'Sybau Picture supports JPG, PNG, WebP formats and text prompts • No registration required • 100% free to use')}
+              {getText('home.footer.features', 'Sybau Picture supports JPG, PNG, WebP formats and text prompts • Google Login • 100% secure')}
             </p>
           </div>
         </div>

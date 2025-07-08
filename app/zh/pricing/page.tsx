@@ -114,7 +114,7 @@ export default function ZHPricingPage() {
       // 免费版直接跳转到中文主页使用生成器
       router.push('/zh')
     } else {
-      // 付费版跳转到中文登录页面（包含注册功能）
+      // 付费版跳转到中文登录页面
       router.push('/zh/auth/signin?callbackUrl=/zh/pricing')
     }
   }

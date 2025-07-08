@@ -2,7 +2,12 @@ import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
 
 // 服务端Stripe实例
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required')
+}
+
+export const stripe = new Stripe(stripeSecretKey, {
   apiVersion: '2025-06-30.basil',
   typescript: true
 })
@@ -15,12 +20,12 @@ export const getStripe = () => {
 // Stripe价格ID配置
 export const STRIPE_PRICE_IDS = {
   standard: {
-    monthly: process.env.STRIPE_PRICE_STANDARD_MONTHLY,
-    yearly: process.env.STRIPE_PRICE_STANDARD_YEARLY
+    monthly: process.env.STRIPE_PRICE_STANDARD_MONTHLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYB',
+    yearly: process.env.STRIPE_PRICE_STANDARD_YEARLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYC'
   },
   pro: {
-    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY,
-    yearly: process.env.STRIPE_PRICE_PRO_YEARLY
+    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYD',
+    yearly: process.env.STRIPE_PRICE_PRO_YEARLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYE'
   }
 }
 

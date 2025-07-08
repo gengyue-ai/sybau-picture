@@ -97,8 +97,12 @@ const nextConfig = {
         source: '/(.*)',
         headers: [
           {
+            key: 'Content-Security-Policy',
+            value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https: blob:; connect-src 'self' https://accounts.google.com https://fal.media https://api.fal.ai https://v3.fal.media; frame-src 'self' https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; object-src 'none'; base-uri 'self'; manifest-src 'self';"
+          },
+          {
             key: 'X-Frame-Options',
-            value: 'DENY'
+            value: 'SAMEORIGIN'
           },
           {
             key: 'X-Content-Type-Options',

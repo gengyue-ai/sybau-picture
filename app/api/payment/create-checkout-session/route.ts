@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 检查用户是否已经有活跃订阅
+    // 检查用户是否已经有活跃订阅（允许升级）
     if (!prisma) {
       return NextResponse.json(
         { error: 'Database not configured' },
@@ -62,12 +62,16 @@ export async function POST(request: NextRequest) {
       where: {
         userId: user.id,
         status: 'active'
+      },
+      include: {
+        plan: true
       }
     })
 
-    if (activeSubscription) {
+    // 允许从免费套餐升级
+    if (activeSubscription && activeSubscription.plan.name !== 'free') {
       return NextResponse.json(
-        { error: 'User already has an active subscription' },
+        { error: 'User already has a paid subscription. Please manage your subscription from the billing portal.' },
         { status: 400 }
       )
     }
@@ -75,9 +79,12 @@ export async function POST(request: NextRequest) {
     // 获取价格ID
     const priceId = STRIPE_PRICE_IDS[planType as keyof typeof STRIPE_PRICE_IDS]?.[billingCycle as keyof typeof STRIPE_PRICE_IDS.standard]
 
+    console.log('Payment request:', { planType, billingCycle, priceId })
+    console.log('Available price IDs:', STRIPE_PRICE_IDS)
+
     if (!priceId) {
       return NextResponse.json(
-        { error: 'Price not found' },
+        { error: `Price not found for ${planType} ${billingCycle}` },
         { status: 404 }
       )
     }
@@ -98,13 +105,15 @@ export async function POST(request: NextRequest) {
     }
 
     // 创建结算会话
+    console.log('Creating checkout session for user:', user.email)
     const checkoutSession = await createCheckoutSession({
       customerId: stripeCustomerId,
       priceId,
-      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/pricing`,
+      successUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancelUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/pricing`,
       userId: user.id
     })
+    console.log('Checkout session created:', checkoutSession.id)
 
     return NextResponse.json({
       sessionId: checkoutSession.id,
