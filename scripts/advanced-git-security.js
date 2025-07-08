@@ -171,6 +171,38 @@ function scanCommitForSensitiveContent(commitHash) {
 }
 
 /**
+ * 脱敏处理敏感信息
+ */
+function sanitizeSensitiveData(data) {
+  if (typeof data === 'string') {
+    let sanitized = data;
+
+    // 脱敏各种敏感信息模式
+    sanitized = sanitized.replace(/sk_live_[a-zA-Z0-9]{99}/g, 'sk_live_***REDACTED***');
+    sanitized = sanitized.replace(/sk_test_[a-zA-Z0-9]{99}/g, 'sk_test_***REDACTED***');
+    sanitized = sanitized.replace(/pk_live_[a-zA-Z0-9]{99}/g, 'pk_live_***REDACTED***');
+    sanitized = sanitized.replace(/pk_test_[a-zA-Z0-9]{99}/g, 'pk_test_***REDACTED***');
+    sanitized = sanitized.replace(/whsec_[a-zA-Z0-9]{32,}/g, 'whsec_***REDACTED***');
+    sanitized = sanitized.replace(/GOCSPX-[a-zA-Z0-9_-]{35}/g, 'GOCSPX-***REDACTED***');
+    sanitized = sanitized.replace(/[0-9]{12}-[a-zA-Z0-9]{32}\.apps\.googleusercontent\.com/g, '***REDACTED***.apps.googleusercontent.com');
+    sanitized = sanitized.replace(/fal-[a-zA-Z0-9_-]{20,}/g, 'fal-***REDACTED***');
+    sanitized = sanitized.replace(/postgres:\/\/[^@]+@[^\/]+\/[^?"\s]+/g, 'postgres://***REDACTED***@***REDACTED***/***REDACTED***');
+
+    return sanitized;
+  } else if (Array.isArray(data)) {
+    return data.map(item => sanitizeSensitiveData(item));
+  } else if (typeof data === 'object' && data !== null) {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(data)) {
+      sanitized[key] = sanitizeSensitiveData(value);
+    }
+    return sanitized;
+  }
+
+  return data;
+}
+
+/**
  * 生成完整的安全报告
  */
 function generateSecurityReport() {
@@ -214,11 +246,15 @@ function generateSecurityReport() {
     report.recommendations.push('当前工作目录存在敏感文件，需要清理');
   }
 
-  // 保存报告
-  const reportPath = path.join(process.cwd(), 'security-report.json');
-  fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
+  // 🔒 脱敏处理报告内容
+  const sanitizedReport = sanitizeSensitiveData(report);
 
-  return report;
+  // 保存脱敏后的报告
+  const reportPath = path.join(process.cwd(), 'security-report.json');
+  fs.writeFileSync(reportPath, JSON.stringify(sanitizedReport, null, 2));
+
+  log.success('✅ 安全报告已生成（已脱敏）');
+  return sanitizedReport;
 }
 
 /**

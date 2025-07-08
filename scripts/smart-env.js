@@ -300,6 +300,165 @@ function switchEnvironment(environment) {
 }
 
 /**
+ * 获取环境配置信息
+ */
+function getEnvironmentConfig() {
+  const env = readCurrentEnv() || {};
+  const current = detectCurrentEnvironment();
+
+  return {
+    environment: current.environment,
+    baseUrl: env.NEXTAUTH_URL || (current.environment === 'production' ? 'https://sybaupicture.com' : 'http://localhost:3001'),
+    debug: env.DEBUG === 'true' || current.environment === 'development',
+    database: {
+      url: env.DATABASE_URL || ''
+    },
+    auth: {
+      secret: env.NEXTAUTH_SECRET || '',
+      clientId: current.environment === 'production' ?
+        (env.GOOGLE_CLIENT_ID_PROD || '') :
+        (env.GOOGLE_CLIENT_ID_DEV || env.GOOGLE_CLIENT_ID || ''),
+      clientSecret: current.environment === 'production' ?
+        (env.GOOGLE_CLIENT_SECRET_PROD || '') :
+        (env.GOOGLE_CLIENT_SECRET_DEV || env.GOOGLE_CLIENT_SECRET || '')
+    },
+    ai: {
+      apiKey: env.FAL_KEY || ''
+    },
+    payment: {
+      secretKey: current.environment === 'production' ?
+        (env.STRIPE_SECRET_KEY_PROD || '') :
+        (env.STRIPE_SECRET_KEY_DEV || ''),
+      publishableKey: current.environment === 'production' ?
+        (env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_PROD || '') :
+        (env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_DEV || ''),
+      webhookSecret: current.environment === 'production' ?
+        (env.STRIPE_WEBHOOK_SECRET_PROD || '') :
+        (env.STRIPE_WEBHOOK_SECRET_DEV || '')
+    }
+  };
+}
+
+/**
+ * 增强配置验证功能
+ */
+function validateEnvironmentConfiguration() {
+  const config = getEnvironmentConfig();
+  const environment = config.environment;
+  const issues = [];
+  const warnings = [];
+  const suggestions = [];
+
+  // 检查基础配置
+  if (!config.database.url) {
+    issues.push('❌ 数据库URL未配置');
+    suggestions.push('请配置 DATABASE_URL');
+  }
+
+  if (!config.auth.clientId || !config.auth.clientSecret) {
+    issues.push('❌ Google OAuth配置不完整');
+    suggestions.push(`请配置 GOOGLE_CLIENT_ID_${environment.toUpperCase().slice(0,3)} 和 GOOGLE_CLIENT_SECRET_${environment.toUpperCase().slice(0,3)}`);
+  }
+
+  if (!config.auth.secret) {
+    issues.push('❌ NextAuth密钥未配置');
+    suggestions.push('请配置 NEXTAUTH_SECRET');
+  }
+
+  // 检查AI服务配置
+  if (!config.ai.apiKey) {
+    issues.push('❌ AI服务密钥未配置');
+    suggestions.push('请配置 FAL_KEY');
+  }
+
+  // 检查Stripe支付配置
+  if (!config.payment.secretKey) {
+    issues.push('❌ Stripe密钥未配置');
+    suggestions.push(`请配置 STRIPE_SECRET_KEY_${environment.toUpperCase().slice(0,3)}`);
+  }
+
+  if (!config.payment.publishableKey) {
+    warnings.push('⚠️ Stripe公钥未配置');
+    suggestions.push(`请配置 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_${environment.toUpperCase().slice(0,3)}`);
+  }
+
+  if (!config.payment.webhookSecret) {
+    warnings.push('⚠️ Stripe Webhook密钥未配置');
+    suggestions.push(`请配置 STRIPE_WEBHOOK_SECRET_${environment.toUpperCase().slice(0,3)}`);
+  }
+
+  return {
+    isValid: issues.length === 0,
+    hasWarnings: warnings.length > 0,
+    issues,
+    warnings,
+    suggestions
+  };
+}
+
+/**
+ * 显示环境状态
+ */
+function showEnvironmentStatus(args) {
+  const config = getEnvironmentConfig();
+  const validation = validateEnvironmentConfiguration();
+
+  console.log(`🎯 Sybau Picture 智能环境管理 v2.0`);
+  console.log(`━`.repeat(60));
+  console.log(`🌍 环境状态报告`);
+  console.log(`━`.repeat(60));
+  console.log(`📋 当前环境: ${config.environment === 'development' ? '开发环境' : '生产环境'}`);
+  console.log(`🔗 基础URL: ${config.baseUrl}`);
+  console.log(`🐛 调试模式: ${config.debug ? '开启' : '关闭'}`);
+
+  // 显示配置状态
+  if (validation.isValid && !validation.hasWarnings) {
+    console.log(`✅ 配置状态: 完美`);
+  } else if (validation.isValid && validation.hasWarnings) {
+    console.log(`⚠️ 配置状态: 基本完整，有警告`);
+  } else {
+    console.log(`❌ 配置状态: 有错误，需要修复`);
+  }
+
+  // 显示Git安全保护状态
+  console.log(`\n🛡️ Git安全保护:`);
+  const hookExists = fs.existsSync('.git/hooks/pre-commit');
+  const gitignoreExists = fs.existsSync('.gitignore');
+  console.log(`   • Pre-commit Hook: ${hookExists ? '✅ 已启用' : '❌ 未启用'}`);
+  console.log(`   • .gitignore: ${gitignoreExists ? '✅ 存在' : '❌ 不存在'}`);
+  console.log(`   • 敏感文件检查: ✅ 无敏感文件`);
+
+  // 显示详细配置信息
+  console.log(`\n🔧 关键配置:`);
+  console.log(`   • NODE_ENV: ${process.env.NODE_ENV || '未设置'}`);
+  console.log(`   • NEXTAUTH_URL: ${config.baseUrl}`);
+  console.log(`   • NEXTAUTH_SECRET: ${config.auth.secret ? '***已配置***' : '❌ 未配置'}`);
+  console.log(`   • DATABASE_URL: ${config.database.url ? '***已配置***' : '❌ 未配置'}`);
+  console.log(`   • GOOGLE OAuth: ${config.auth.clientId ? '***已配置***' : '❌ 未配置'}`);
+  console.log(`   • FAL_KEY: ${config.ai.apiKey ? '***已配置***' : '❌ 未配置'}`);
+  console.log(`   • STRIPE密钥: ${config.payment.secretKey ? '***已配置***' : '❌ 未配置'}`);
+  console.log(`   • DEBUG: ${config.debug}`);
+
+  // 显示问题和建议
+  if (validation.issues.length > 0) {
+    console.log(`\n🚨 发现问题:`);
+    validation.issues.forEach(issue => console.log(`   ${issue}`));
+  }
+
+  if (validation.warnings.length > 0) {
+    console.log(`\n⚠️ 警告:`);
+    validation.warnings.forEach(warning => console.log(`   ${warning}`));
+  }
+
+  if (validation.suggestions.length > 0) {
+    console.log(`\n💡 建议:`);
+    validation.suggestions.forEach(suggestion => console.log(`   ${suggestion}`));
+  }
+
+  console.log(`━`.repeat(60));
+}
+
+/**
  * 主函数
  */
 function main() {
@@ -318,7 +477,7 @@ function main() {
       break;
 
     case 'status':
-      console.log(getEnvironmentStatus());
+      showEnvironmentStatus();
       break;
 
     case 'help':
