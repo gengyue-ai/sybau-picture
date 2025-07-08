@@ -170,11 +170,36 @@ function detectCurrentEnvironment() {
 }
 
 /**
+ * 检查Git保护状态
+ */
+function checkGitProtection() {
+  const preCommitHook = path.join(process.cwd(), '.git', 'hooks', 'pre-commit');
+  const gitignoreFile = path.join(process.cwd(), '.gitignore');
+
+  const protection = {
+    preCommitHook: fs.existsSync(preCommitHook),
+    gitignoreExists: fs.existsSync(gitignoreFile),
+    sensitiveFilesInRepo: false
+  };
+
+  // 检查是否有敏感文件被跟踪
+  try {
+    const trackedFiles = execSync('git ls-files', { encoding: 'utf8', stdio: 'pipe' });
+    protection.sensitiveFilesInRepo = /\.env|secret|key|credential/i.test(trackedFiles);
+  } catch (error) {
+    // Git仓库可能不存在
+  }
+
+  return protection;
+}
+
+/**
  * 获取环境状态报告
  */
 function getEnvironmentStatus() {
   const current = detectCurrentEnvironment();
   const env = readCurrentEnv();
+  const gitProtection = checkGitProtection();
 
   const report = [
     '🌍 环境状态报告',
@@ -184,6 +209,11 @@ function getEnvironmentStatus() {
     `🔗 基础URL: ${env?.NEXTAUTH_URL || '未配置'}`,
     `🐛 调试模式: ${env?.DEBUG === 'true' ? '开启' : '关闭'}`,
     `✅ 配置状态: ${current.valid ? '正常' : '需要修复'}`,
+    '',
+    '🛡️ Git安全保护:',
+    `   • Pre-commit Hook: ${gitProtection.preCommitHook ? '✅ 已启用' : '❌ 未启用'}`,
+    `   • .gitignore: ${gitProtection.gitignoreExists ? '✅ 存在' : '❌ 缺失'}`,
+    `   • 敏感文件检查: ${gitProtection.sensitiveFilesInRepo ? '⚠️ 发现敏感文件' : '✅ 无敏感文件'}`,
     ''
   ];
 

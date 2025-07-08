@@ -63,7 +63,10 @@
     "ai:memory": "node scripts/update-ai-memory.js",
     "ai:memory:update": "node scripts/update-ai-memory.js 更新",
     "ai:memory:status": "node scripts/update-ai-memory.js 状态",
-    "ai:memory:help": "node scripts/update-ai-memory.js 帮助"
+    "ai:memory:help": "node scripts/update-ai-memory.js 帮助",
+    "git:security": "node scripts/git-security-fix.js",
+    "git:security:fix": "node scripts/git-security-fix.js",
+    "git:security:check": "node scripts/smart-env.js 状态"
   },
   "dependencies": {
     "@fal-ai/serverless-client": "^0.15.0",
