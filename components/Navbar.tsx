@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useSession, signOut } from 'next-auth/react'
+import { useSession, signOut, signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -296,7 +296,7 @@ export default function Navbar() {
                 onClick={() => {
                   console.log('登录按钮被点击')
                   // 直接跳转到Google OAuth登录
-                  window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(getNavLink('/'))}`
+                  signIn('google', { callbackUrl: getNavLink('/') })
                 }}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white border-0 flex items-center space-x-2"
               >
@@ -341,7 +341,7 @@ export default function Navbar() {
                       console.log('移动端登录按钮被点击')
                       setIsMenuOpen(false)
                       // 直接跳转到Google OAuth登录
-                      window.location.href = `/api/auth/signin/google?callbackUrl=${encodeURIComponent(getNavLink('/'))}`
+                      signIn('google', { callbackUrl: getNavLink('/') })
                     }}
                   >
                     {t.signIn}

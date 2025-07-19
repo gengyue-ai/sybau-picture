@@ -7,8 +7,126 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { User, Calendar, CreditCard, Image, Settings, Mail } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
 import Link from 'next/link'
+
+// 国际化文本
+const texts = {
+  en: {
+    title: "Profile",
+    subtitle: "Manage your account information and subscription status",
+    personalInfo: "Personal Information",
+    avatar: "Avatar", 
+    joinedAt: "Joined",
+    quickActions: "Quick Actions",
+    startCreating: "Start Creating",
+    creationHistory: "Creation History",
+    upgradePlan: "Upgrade Plan",
+    currentPlan: "Current Plan",
+    subscriptionInfo: "Your subscription status and benefits information",
+    monthlyQuota: "Monthly Quota",
+    images: "images",
+    imageQuality: "Image Quality",
+    standardQuality: "Standard Quality",
+    highQualityNoWatermark: "High Quality No Watermark",
+    withWatermark: "With Watermark",
+    professionalQuality: "Professional Quality",
+    monthlyUsage: "Monthly Usage",
+    usageDescription: "View your image generation usage this month",
+    used: "Used",
+    remaining: "Remaining",
+    generated: "Generated",
+    usageRate: "Usage Rate",
+    quotaWarning: "⚠️ Your monthly quota is almost depleted, consider upgrading your plan for more generation credits",
+    upgradeNow: "Upgrade Now",
+    accountManagement: "Account Management",
+    accountSettings: "Manage your account settings and data",
+    loginMethod: "Login Method",
+    googleAccount: "Google Account Login",
+    verified: "Verified",
+    dataSync: "Data Sync",
+    creationHistoryAndPreferences: "Creation history and preference settings",
+    synced: "Synced",
+    loadingProfile: "Loading profile...",
+    fixingUserData: "Fixing user data...",
+    profileLoadFailed: "Profile Load Failed",
+    fixFailedMessage: "Unable to load user profile after repair attempt, please try again later.",
+    stillFailedMessage: "Unable to load user profile, attempting to fix...",
+    fixUserData: "🔧 Fix User Data",
+    fixing: "Fixing...",
+    refreshPage: "🔄 Refresh Page",
+    backToHome: "Back to Home",
+    debugInfo: "Debug Information:",
+    loginStatus: "Login Status",
+    userEmail: "User Email",
+    fixAttempted: "Fix Attempted",
+    fixInProgress: "Fix In Progress",
+    yes: "Yes",
+    no: "No",
+    planTypes: {
+      free: "FREE Plan",
+      standard: "STANDARD Plan",
+      pro: "PRO Plan"
+    }
+  },
+  zh: {
+    title: "个人资料",
+    subtitle: "管理您的账户信息和订阅状态",
+    personalInfo: "个人信息",
+    avatar: "头像",
+    joinedAt: "加入时间",
+    quickActions: "快速操作",
+    startCreating: "开始创作",
+    creationHistory: "创作历史",
+    upgradePlan: "升级套餐",
+    currentPlan: "当前套餐",
+    subscriptionInfo: "您的订阅状态和权益信息",
+    monthlyQuota: "每月配额",
+    images: "张图片",
+    imageQuality: "图片质量",
+    standardQuality: "标准画质",
+    highQualityNoWatermark: "高清无水印",
+    withWatermark: "带水印",
+    professionalQuality: "专业品质",
+    monthlyUsage: "本月使用情况",
+    usageDescription: "查看您本月的图片生成使用量",
+    used: "已使用",
+    remaining: "剩余",
+    generated: "已生成",
+    usageRate: "使用率",
+    quotaWarning: "⚠️ 您的月度配额即将用完，考虑升级套餐以获得更多生成次数",
+    upgradeNow: "立即升级",
+    accountManagement: "账户管理",
+    accountSettings: "管理您的账户设置和数据",
+    loginMethod: "登录方式",
+    googleAccount: "Google账户登录",
+    verified: "已验证",
+    dataSync: "数据同步",
+    creationHistoryAndPreferences: "创作历史和偏好设置",
+    synced: "已同步",
+    loadingProfile: "加载用户资料...",
+    fixingUserData: "正在修复用户数据...",
+    profileLoadFailed: "用户资料加载失败",
+    fixFailedMessage: "尝试修复后仍无法加载用户资料，请稍后重试。",
+    stillFailedMessage: "无法加载用户资料，正在尝试修复...",
+    fixUserData: "🔧 修复用户数据",
+    fixing: "正在修复...",
+    refreshPage: "🔄 刷新页面",
+    backToHome: "返回首页",
+    debugInfo: "调试信息:",
+    loginStatus: "登录状态",
+    userEmail: "用户邮箱",
+    fixAttempted: "修复尝试",
+    fixInProgress: "修复中",
+    yes: "是",
+    no: "否",
+    planTypes: {
+      free: "免费套餐",
+      standard: "标准套餐",
+      pro: "专业套餐"
+    }
+  }
+};
 
 interface UserProfile {
   name: string
@@ -33,6 +151,11 @@ export default function ProfilePage() {
   const [fixing, setFixing] = useState(false)
   const [fixAttempted, setFixAttempted] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
+  
+  // 检测当前语言
+  const currentLang = pathname.startsWith('/zh') ? 'zh' : 'en'
+  const t = texts[currentLang]
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -120,7 +243,7 @@ export default function ProfilePage() {
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
           <p className="mt-4 text-gray-600">
-            {fixing ? '正在修复用户数据...' : '加载用户资料...'}
+            {fixing ? t.fixingUserData : t.loadingProfile}
           </p>
         </div>
       </div>
@@ -132,11 +255,11 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
         <Card className="w-96">
           <CardContent className="p-6 text-center">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">用户资料加载失败</h3>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t.profileLoadFailed}</h3>
             <p className="text-gray-600 mb-4">
               {fixAttempted ?
-                '尝试修复后仍无法加载用户资料，请稍后重试。' :
-                '无法加载用户资料，正在尝试修复...'}
+                t.fixFailedMessage :
+                t.stillFailedMessage}
             </p>
             <div className="space-y-3">
               {!fixAttempted && (
@@ -145,7 +268,7 @@ export default function ProfilePage() {
                   onClick={fixUser}
                   disabled={fixing}
                 >
-                  {fixing ? '正在修复...' : '🔧 修复用户数据'}
+                  {fixing ? t.fixing : t.fixUserData}
                 </Button>
               )}
               <Button
@@ -153,24 +276,24 @@ export default function ProfilePage() {
                 className="w-full"
                 onClick={() => window.location.reload()}
               >
-                🔄 刷新页面
+                {t.refreshPage}
               </Button>
               <Button
                 variant="outline"
                 className="w-full"
                 onClick={() => router.push('/')}
               >
-                返回首页
+                {t.backToHome}
               </Button>
             </div>
 
             {/* 调试信息 */}
             <div className="mt-6 p-4 bg-gray-50 rounded-lg text-left text-sm">
-              <h4 className="font-semibold mb-2">调试信息:</h4>
-              <p>登录状态: {status}</p>
-              <p>用户邮箱: {session?.user?.email}</p>
-              <p>修复尝试: {fixAttempted ? '是' : '否'}</p>
-              <p>修复中: {fixing ? '是' : '否'}</p>
+              <h4 className="font-semibold mb-2">{t.debugInfo}</h4>
+              <p>{t.loginStatus}: {status}</p>
+              <p>{t.userEmail}: {session?.user?.email}</p>
+              <p>{t.fixAttempted}: {fixAttempted ? t.yes : t.no}</p>
+              <p>{t.fixInProgress}: {fixing ? t.yes : t.no}</p>
             </div>
           </CardContent>
         </Card>
@@ -186,9 +309,9 @@ export default function ProfilePage() {
         {/* 页面标题 */}
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
-            个人资料
+            {t.title}
           </h1>
-          <p className="text-gray-600 mt-2">管理您的账户信息和订阅状态</p>
+          <p className="text-gray-600 mt-2">{t.subtitle}</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -201,7 +324,7 @@ export default function ProfilePage() {
                   {profile.image ? (
                     <img
                       src={profile.image}
-                      alt="头像"
+                      alt={t.avatar}
                       className="w-full h-full rounded-full object-cover border-4 border-purple-200"
                     />
                   ) : (
@@ -217,7 +340,7 @@ export default function ProfilePage() {
                 </p>
                 <p className="text-sm text-gray-500 flex items-center justify-center mt-2">
                   <Calendar className="w-4 h-4 mr-2" />
-                  加入时间: {new Date(profile.createdAt).toLocaleDateString('zh-CN')}
+                  {t.joinedAt}: {new Date(profile.createdAt).toLocaleDateString(currentLang === 'zh' ? 'zh-CN' : 'en-US')}
                 </p>
               </CardContent>
             </Card>
@@ -227,26 +350,26 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="text-lg flex items-center">
                   <Settings className="w-5 h-5 mr-2" />
-                  快速操作
+                  {t.quickActions}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Link href="/" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <Image className="w-4 h-4 mr-2" />
-                    开始创作
+                    {t.startCreating}
                   </Button>
                 </Link>
                 <Link href="/history" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <Image className="w-4 h-4 mr-2" />
-                    创作历史
+                    {t.creationHistory}
                   </Button>
                 </Link>
                 <Link href="/pricing" className="block">
                   <Button variant="outline" className="w-full justify-start">
                     <CreditCard className="w-4 h-4 mr-2" />
-                    升级套餐
+                    {t.upgradePlan}
                   </Button>
                 </Link>
               </CardContent>
@@ -260,10 +383,10 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
                   <CreditCard className="w-6 h-6 mr-2" />
-                  当前套餐
+                  {t.currentPlan}
                 </CardTitle>
                 <CardDescription>
-                  您的订阅状态和权益信息
+                  {t.subscriptionInfo}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -279,12 +402,12 @@ export default function ProfilePage() {
                           : 'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 border-gray-300'
                       }`}
                     >
-                      {profile.plan.name.toUpperCase()} 套餐
+                      {t.planTypes[profile.plan.name as keyof typeof t.planTypes] || profile.plan.name.toUpperCase()}
                     </Badge>
                   </div>
                   <Link href="/pricing">
                     <Button size="sm" variant="outline">
-                      升级套餐
+                      {t.upgradePlan}
                     </Button>
                   </Link>
                 </div>
@@ -292,17 +415,17 @@ export default function ProfilePage() {
                 {/* 套餐特性 */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                   <div className="bg-purple-50 rounded-lg p-4">
-                    <h4 className="font-medium text-purple-800 mb-2">每月配额</h4>
+                    <h4 className="font-medium text-purple-800 mb-2">{t.monthlyQuota}</h4>
                     <p className="text-2xl font-bold text-purple-600">{profile.usage.max}</p>
-                    <p className="text-sm text-purple-600">张图片</p>
+                    <p className="text-sm text-purple-600">{t.images}</p>
                   </div>
                   <div className="bg-pink-50 rounded-lg p-4">
-                    <h4 className="font-medium text-pink-800 mb-2">图片质量</h4>
+                    <h4 className="font-medium text-pink-800 mb-2">{t.imageQuality}</h4>
                     <p className="text-lg font-bold text-pink-600">
-                      {profile.plan.hasWatermark ? '标准画质' : '高清无水印'}
+                      {profile.plan.hasWatermark ? t.standardQuality : t.highQualityNoWatermark}
                     </p>
                     <p className="text-sm text-pink-600">
-                      {profile.plan.hasWatermark ? '带水印' : '专业品质'}
+                      {profile.plan.hasWatermark ? t.withWatermark : t.professionalQuality}
                     </p>
                   </div>
                 </div>
@@ -314,20 +437,20 @@ export default function ProfilePage() {
               <CardHeader>
                 <CardTitle className="text-xl flex items-center">
                   <Image className="w-6 h-6 mr-2" />
-                  本月使用情况
+                  {t.monthlyUsage}
                 </CardTitle>
                 <CardDescription>
-                  查看您本月的图片生成使用量
+                  {t.usageDescription}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm font-medium text-gray-700">
-                      已使用: {profile.usage.current} / {profile.usage.max}
+                      {t.used}: {profile.usage.current} / {profile.usage.max}
                     </span>
                     <span className="text-sm text-gray-500">
-                      剩余: {profile.usage.remaining}
+                      {t.remaining}: {profile.usage.remaining}
                     </span>
                   </div>
 
@@ -339,26 +462,26 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-4 text-center">
                     <div className="bg-green-50 rounded-lg p-3">
                       <p className="text-lg font-bold text-green-600">{profile.usage.current}</p>
-                      <p className="text-xs text-green-600">已生成</p>
+                      <p className="text-xs text-green-600">{t.generated}</p>
                     </div>
                     <div className="bg-blue-50 rounded-lg p-3">
                       <p className="text-lg font-bold text-blue-600">{profile.usage.remaining}</p>
-                      <p className="text-xs text-blue-600">剩余</p>
+                      <p className="text-xs text-blue-600">{t.remaining}</p>
                     </div>
                     <div className="bg-purple-50 rounded-lg p-3">
                       <p className="text-lg font-bold text-purple-600">{Math.round(usagePercentage)}%</p>
-                      <p className="text-xs text-purple-600">使用率</p>
+                      <p className="text-xs text-purple-600">{t.usageRate}</p>
                     </div>
                   </div>
 
                   {usagePercentage >= 80 && (
                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                       <p className="text-orange-800 text-sm font-medium">
-                        ⚠️ 您的月度配额即将用完，考虑升级套餐以获得更多生成次数
+                        {t.quotaWarning}
                       </p>
                       <Link href="/pricing" className="inline-block mt-2">
                         <Button size="sm" className="bg-orange-600 hover:bg-orange-700">
-                          立即升级
+                          {t.upgradeNow}
                         </Button>
                       </Link>
                     </div>
@@ -370,29 +493,29 @@ export default function ProfilePage() {
             {/* 账户管理 */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl">账户管理</CardTitle>
+                <CardTitle className="text-xl">{t.accountManagement}</CardTitle>
                 <CardDescription>
-                  管理您的账户设置和数据
+                  {t.accountSettings}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <h4 className="font-medium">登录方式</h4>
-                    <p className="text-sm text-gray-600">Google账户登录</p>
+                    <h4 className="font-medium">{t.loginMethod}</h4>
+                    <p className="text-sm text-gray-600">{t.googleAccount}</p>
                   </div>
                   <Badge variant="outline" className="bg-green-100 text-green-800">
-                    已验证
+                    {t.verified}
                   </Badge>
                 </div>
 
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <h4 className="font-medium">数据同步</h4>
-                    <p className="text-sm text-gray-600">创作历史和偏好设置</p>
+                    <h4 className="font-medium">{t.dataSync}</h4>
+                    <p className="text-sm text-gray-600">{t.creationHistoryAndPreferences}</p>
                   </div>
                   <Badge variant="outline" className="bg-blue-100 text-blue-800">
-                    已同步
+                    {t.synced}
                   </Badge>
                 </div>
               </CardContent>

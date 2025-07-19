@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Check, X, Star, Sparkles, Zap, Crown, Shield, Users, Rocket, Loader2 } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { toast } from '@/hooks/use-toast'
@@ -106,12 +106,83 @@ const faqs = [
   }
 ]
 
+interface UserSubscription {
+  user: {
+    id: string
+    email: string
+    name: string
+    planId: string
+    plan: {
+      name: string
+      hasWatermark: boolean
+    }
+  }
+  subscription: any
+  usage: {
+    current: number
+    max: number
+    remaining: number
+    canGenerate: boolean
+  }
+  features: any
+}
+
 export default function PricingPage() {
   const [isAnnual, setIsAnnual] = useState(false)
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
+  const [userSubscription, setUserSubscription] = useState<UserSubscription | null>(null)
+  const [loadingSubscription, setLoadingSubscription] = useState(false)
   const pricingPlans = getPricingPlans(isAnnual)
   const router = useRouter()
   const { data: session, status } = useSession()
+
+  // 获取用户订阅状态
+  const fetchUserSubscription = async () => {
+    if (!session?.user?.email) return
+    
+    setLoadingSubscription(true)
+    try {
+      const response = await fetch('/api/subscription')
+      if (response.ok) {
+        const data = await response.json()
+        setUserSubscription(data)
+      }
+    } catch (error) {
+      console.error('获取订阅状态失败:', error)
+    } finally {
+      setLoadingSubscription(false)
+    }
+  }
+
+  useEffect(() => {
+    if (status === 'authenticated' && session?.user?.email) {
+      fetchUserSubscription()
+    }
+  }, [status, session])
+
+  // 检查用户是否已经订阅了相同的套餐
+  const isCurrentPlan = (planId: string) => {
+    if (!userSubscription?.user?.plan) return false
+    return userSubscription.user.plan.name.toLowerCase() === planId.toLowerCase()
+  }
+
+  // 获取按钮文本和状态
+  const getPlanButtonInfo = (planId: string) => {
+    if (planId === 'free') {
+      return { text: 'Get Started Free', disabled: false, variant: 'outline' as const }
+    }
+    
+    if (isCurrentPlan(planId)) {
+      return { text: 'Current Plan', disabled: true, variant: 'secondary' as const }
+    }
+    
+    const plan = pricingPlans.find(p => p.id === planId)
+    return { 
+      text: plan?.buttonText || 'Choose Plan', 
+      disabled: false, 
+      variant: plan?.buttonVariant || 'default' as const
+    }
+  }
 
   const handlePlanClick = async (planId: string) => {
     if (planId === 'free') {
@@ -121,23 +192,23 @@ export default function PricingPage() {
     }
 
     // 检查用户登录状态
-    console.log('=== 支付按钮点击 ===')
-    console.log('Session状态:', {
-      status,
-      hasSession: !!session,
-      userEmail: session?.user?.email,
-      sessionData: session
-    })
-
     if (status === 'loading') {
-      console.log('Session正在加载，请等待...')
       return
     }
 
     if (status === 'unauthenticated' || !session?.user?.email) {
-      console.log('用户未登录，跳转到登录页面')
       // 未登录用户跳转到登录页面
       router.push('/auth/signin?callbackUrl=/pricing')
+      return
+    }
+
+    // 检查是否是当前套餐
+    if (isCurrentPlan(planId)) {
+      toast({
+        title: "已是当前套餐",
+        description: `您已经订阅了${planId.toUpperCase()}套餐，无需重复购买。`,
+        variant: "default"
+      })
       return
     }
 
@@ -272,22 +343,35 @@ export default function PricingPage() {
                   <p className="text-gray-600">{plan.description}</p>
                 </CardHeader>
                 <CardContent>
-                  <Button
-                    className={`w-full mb-6 ${plan.popular ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' : ''}`}
-                    variant={plan.buttonVariant}
-                    size="lg"
-                    onClick={() => handlePlanClick(plan.id)}
-                    disabled={loadingPlan === plan.id}
-                  >
-                    {loadingPlan === plan.id ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
-                    ) : (
-                      plan.buttonText
-                    )}
-                  </Button>
+                  {(() => {
+                    const buttonInfo = getPlanButtonInfo(plan.id)
+                    const isLoading = loadingPlan === plan.id
+                    const isLoadingUserData = loadingSubscription && status === 'authenticated'
+                    
+                    return (
+                      <Button
+                        className={`w-full mb-6 ${plan.popular && !buttonInfo.disabled ? 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600' : ''} ${buttonInfo.disabled ? 'opacity-75' : ''}`}
+                        variant={buttonInfo.variant}
+                        size="lg"
+                        onClick={() => handlePlanClick(plan.id)}
+                        disabled={isLoading || buttonInfo.disabled || isLoadingUserData}
+                      >
+                        {isLoading ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                          </>
+                        ) : isLoadingUserData ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Loading...
+                          </>
+                        ) : (
+                          buttonInfo.text
+                        )}
+                      </Button>
+                    )
+                  })()}
 
                   <div className="space-y-4">
                     <div>
