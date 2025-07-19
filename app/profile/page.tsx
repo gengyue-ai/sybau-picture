@@ -30,6 +30,8 @@ export default function ProfilePage() {
   const { data: session, status } = useSession()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [fixing, setFixing] = useState(false)
+  const [fixAttempted, setFixAttempted] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -43,22 +45,70 @@ export default function ProfilePage() {
     }
   }, [status, router])
 
+  const fixUser = async () => {
+    if (fixing || fixAttempted) return
+
+    setFixing(true)
+    setFixAttempted(true)
+
+    try {
+      console.log('🔧 正在修复用户数据...')
+      const response = await fetch('/api/admin/fix-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+      console.log('修复结果:', result)
+
+      if (result.success) {
+        console.log('✅ 用户修复成功，重新获取资料...')
+        // 等待一秒让数据库更新
+        await new Promise(resolve => setTimeout(resolve, 1000))
+        await fetchProfile()
+      } else {
+        console.error('❌ 用户修复失败:', result.error)
+      }
+    } catch (error) {
+      console.error('修复过程出错:', error)
+    } finally {
+      setFixing(false)
+    }
+  }
+
   const fetchProfile = async () => {
     try {
+      console.log('📡 正在获取用户资料...')
       const response = await fetch('/api/subscription')
+
       if (response.ok) {
         const data = await response.json()
+        console.log('✅ 用户资料获取成功:', data)
         setProfile({
-          name: session?.user?.name || '',
-          email: session?.user?.email || '',
-          image: session?.user?.image || '',
+          name: data.user.name || session?.user?.name || '',
+          email: data.user.email || session?.user?.email || '',
+          image: data.user.image || session?.user?.image || '',
           plan: data.user.plan,
           usage: data.usage,
           createdAt: data.user.createdAt || new Date().toISOString()
         })
+      } else if (response.status === 404) {
+        console.log('⚠️ 用户不存在，尝试自动修复...')
+        // 用户不存在，自动尝试修复
+        if (!fixAttempted) {
+          await fixUser()
+        }
+      } else {
+        console.error('❌ 获取用户资料失败:', response.status, response.statusText)
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error)
+      console.error('获取用户资料时出错:', error)
+      // 网络错误时也尝试修复
+      if (!fixAttempted) {
+        await fixUser()
+      }
     } finally {
       setLoading(false)
     }
@@ -69,7 +119,9 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载用户资料...</p>
+          <p className="mt-4 text-gray-600">
+            {fixing ? '正在修复用户数据...' : '加载用户资料...'}
+          </p>
         </div>
       </div>
     )
@@ -80,10 +132,46 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-pink-50 flex items-center justify-center">
         <Card className="w-96">
           <CardContent className="p-6 text-center">
-            <p className="text-gray-600">无法加载用户资料</p>
-            <Button className="mt-4" onClick={() => router.push('/')}>
-              返回首页
-            </Button>
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">用户资料加载失败</h3>
+            <p className="text-gray-600 mb-4">
+              {fixAttempted ?
+                '尝试修复后仍无法加载用户资料，请稍后重试。' :
+                '无法加载用户资料，正在尝试修复...'}
+            </p>
+            <div className="space-y-3">
+              {!fixAttempted && (
+                <Button
+                  className="w-full"
+                  onClick={fixUser}
+                  disabled={fixing}
+                >
+                  {fixing ? '正在修复...' : '🔧 修复用户数据'}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.reload()}
+              >
+                🔄 刷新页面
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push('/')}
+              >
+                返回首页
+              </Button>
+            </div>
+
+            {/* 调试信息 */}
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg text-left text-sm">
+              <h4 className="font-semibold mb-2">调试信息:</h4>
+              <p>登录状态: {status}</p>
+              <p>用户邮箱: {session?.user?.email}</p>
+              <p>修复尝试: {fixAttempted ? '是' : '否'}</p>
+              <p>修复中: {fixing ? '是' : '否'}</p>
+            </div>
           </CardContent>
         </Card>
       </div>

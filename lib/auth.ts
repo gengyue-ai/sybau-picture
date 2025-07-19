@@ -68,12 +68,33 @@ export const authOptions: NextAuthOptions = {
   },
 
   callbacks: {
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user, account, profile }) => {
+      console.log('🔑 JWT回调:', {
+        hasUser: !!user,
+        hasAccount: !!account,
+        hasProfile: !!profile,
+        provider: account?.provider
+      })
+
+      // 首次登录时设置基本信息
       if (user) {
         token.id = user.id
         token.email = user.email
         token.name = user.name
         token.image = user.image
+      }
+
+      // Google OAuth专门处理 - 只在首次登录时设置
+      if (account?.provider === 'google' && profile && user) {
+        const googleImage = (profile as any)?.picture || (profile as any)?.image
+        const googleName = (profile as any)?.name
+        const googleEmail = (profile as any)?.email
+
+        console.log('🎯 Google OAuth首次登录，设置最新信息')
+        
+        token.image = googleImage || token.image
+        token.name = googleName || token.name
+        token.email = googleEmail || token.email
       }
 
       if (account) {
@@ -112,9 +133,16 @@ export const authOptions: NextAuthOptions = {
       // 生产模式：正常的Google OAuth处理
       if (account?.provider === 'google' && profile) {
         try {
-          if (!prisma) {
-            console.error('数据库未配置')
-            return true // 允许登录但不保存到数据库
+          // 检查数据库配置
+          const dbConfigured = process.env.DATABASE_URL &&
+                               process.env.DATABASE_URL !== '[YOUR_DATABASE_URL]' &&
+                               (process.env.DATABASE_URL.startsWith('postgres://') ||
+                                process.env.DATABASE_URL.startsWith('postgresql://'))
+
+          if (!dbConfigured || !prisma) {
+            console.warn('⚠️ 数据库未配置，跳过用户数据保存，但允许登录')
+            // 即使数据库未配置，也允许登录以保持session
+            return true
           }
 
           // 查找或创建用户
@@ -123,15 +151,46 @@ export const authOptions: NextAuthOptions = {
           })
 
           if (!existingUser) {
-            // 创建新用户
+            // 查找免费计划
+            const freePlan = await prisma.plan.findFirst({
+              where: {
+                OR: [
+                  { id: 'plan_free' },
+                  { name: 'free' },
+                  { name: 'Free Plan' }
+                ]
+              }
+            });
+
+            if (!freePlan) {
+              console.error('❌ 未找到免费计划，用户创建可能失败');
+            }
+
+            // 获取最新的Google头像
+            const googleImage = (profile as any)?.picture || (profile as any)?.image || user.image;
+
+            // 创建新用户，设置为免费套餐
             const newUser = await prisma.user.create({
               data: {
                 email: user.email!,
                 name: user.name || user.email!.split('@')[0],
-                image: user.image,
+                image: googleImage, // 使用Google profile中的最新头像
                 password: null, // Google用户没有密码
+                planId: freePlan?.id || null, // 如果没找到计划就设为null
               }
-            })
+            });
+
+            // 单独创建UserUsage记录
+            const currentDate = new Date();
+            await prisma.userUsage.create({
+              data: {
+                userId: newUser.id,
+                month: currentDate.getMonth() + 1, // 1-12
+                year: currentDate.getFullYear(),
+                imagesGenerated: 0,
+                lastResetAt: currentDate
+              }
+            });
 
             // 创建账户关联
             await prisma.account.create({
@@ -150,8 +209,23 @@ export const authOptions: NextAuthOptions = {
               }
             })
 
-            console.log('Google用户创建成功:', user.email)
+            console.log('✅ Google用户创建成功(免费套餐):', user.email)
           } else {
+            // 获取最新的Google头像
+            const googleImage = (profile as any)?.picture || (profile as any)?.image || user.image;
+
+            // 只在头像确实发生变化时才更新
+            if (googleImage && googleImage !== existingUser.image) {
+              await prisma.user.update({
+                where: { email: user.email! },
+                data: {
+                  name: user.name || existingUser.name,
+                  image: googleImage,
+                }
+              });
+              console.log('🔄 更新用户头像:', googleImage);
+            }
+
             // 检查账户关联是否存在
             const existingAccount = await prisma.account.findUnique({
               where: {
@@ -179,11 +253,28 @@ export const authOptions: NextAuthOptions = {
                   session_state: account.session_state,
                 }
               })
+            } else {
+              // 更新现有账户关联的token信息
+              await prisma.account.update({
+                where: { id: existingAccount.id },
+                data: {
+                  access_token: account.access_token,
+                  refresh_token: account.refresh_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                }
+              });
             }
+            console.log('✅ Google用户登录成功(头像已更新):', user.email)
           }
         } catch (error) {
-          console.error('Google登录处理错误:', error)
-          return true // 允许登录但记录错误
+          console.error('❌ Google登录数据库操作错误:', error)
+          // 即使数据库操作失败，也允许登录以保持基本功能
+          console.log('⚠️ 允许登录但跳过数据库操作')
+          return true
         }
       }
 
@@ -191,37 +282,32 @@ export const authOptions: NextAuthOptions = {
     },
 
     redirect: async ({ url, baseUrl }) => {
-      console.log('重定向回调:', { url, baseUrl, mockMode: isMockMode })
+      console.log('🔄 重定向回调:', { url, baseUrl, envBaseUrl: envConfig.baseUrl })
 
-      // 使用环境管理器的baseUrl
-      const localBaseUrl = envConfig.baseUrl
+      // 简化重定向逻辑，避免复杂的URL检查
 
-      // 强制阻止跳转到NextAuth内置页面
-      if (url.includes('/api/auth/signin') ||
-          url.includes('/api/auth/signout') ||
-          url.includes('oauth') ||
-          url.includes('providers') ||
-          url.includes('csrf')) {
-        console.log('阻止跳转到内置页面，重定向到首页')
-        return localBaseUrl
+      // 登录成功后，始终重定向到首页
+      if (url.includes('/api/auth/callback') || url.includes('/auth/signin')) {
+        console.log('✅ 认证成功，重定向到首页:', envConfig.baseUrl)
+        return envConfig.baseUrl
       }
 
-      // 如果是相对路径，返回本地baseUrl + 路径
+      // 如果URL是相对路径，拼接baseUrl
       if (url.startsWith('/')) {
-        const redirectUrl = localBaseUrl + url
-        console.log('重定向到:', redirectUrl)
-        return redirectUrl
+        const fullUrl = envConfig.baseUrl + url
+        console.log('🔗 相对路径重定向:', fullUrl)
+        return fullUrl
       }
 
-      // 确保只能重定向到同域名下
-      if (url.startsWith(localBaseUrl)) {
-        console.log('同域名重定向:', url)
+      // 如果URL已经是完整的同域名URL，直接使用
+      if (url.startsWith(envConfig.baseUrl)) {
+        console.log('🎯 同域名重定向:', url)
         return url
       }
 
       // 默认重定向到首页
-      console.log('默认重定向到首页')
-      return localBaseUrl
+      console.log('🏠 默认重定向到首页:', envConfig.baseUrl)
+      return envConfig.baseUrl
     }
   },
 
@@ -238,6 +324,21 @@ export const authOptions: NextAuthOptions = {
   },
 
   secret: envConfig.auth.secret,
+
+  // Cookie配置 - 修复域名设置
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: !envConfig.isDevelopment,
+        // 不设置domain，让浏览器自动处理
+        domain: undefined
+      }
+    }
+  },
 
   // 调试信息
   debug: envConfig.debug,

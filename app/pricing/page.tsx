@@ -120,18 +120,29 @@ export default function PricingPage() {
       return
     }
 
-    // 检查用户是否已登录
+    // 检查用户登录状态
+    console.log('=== 支付按钮点击 ===')
+    console.log('Session状态:', {
+      status,
+      hasSession: !!session,
+      userEmail: session?.user?.email,
+      sessionData: session
+    })
+
     if (status === 'loading') {
+      console.log('Session正在加载，请等待...')
       return
     }
 
-    if (!session) {
+    if (status === 'unauthenticated' || !session?.user?.email) {
+      console.log('用户未登录，跳转到登录页面')
       // 未登录用户跳转到登录页面
       router.push('/auth/signin?callbackUrl=/pricing')
       return
     }
 
-    // 开始支付流程
+    // 用户已登录，开始支付流程
+    console.log('用户已登录，开始支付流程:', session.user.email)
     setLoadingPlan(planId)
 
     try {
@@ -147,12 +158,19 @@ export default function PricingPage() {
       })
 
       const data = await response.json()
+      console.log('支付API响应:', { status: response.status, data })
 
       if (!response.ok) {
+        if (response.status === 401) {
+          console.log('支付API返回401，可能session过期，跳转登录')
+          router.push('/auth/signin?callbackUrl=/pricing')
+          return
+        }
         throw new Error(data.error || 'Failed to create checkout session')
       }
 
       if (data.url) {
+        console.log('重定向到Stripe支付页面:', data.url)
         // 重定向到Stripe结算页面
         window.location.href = data.url
       } else {

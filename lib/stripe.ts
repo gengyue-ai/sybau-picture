@@ -1,31 +1,60 @@
 import Stripe from 'stripe'
 import { loadStripe } from '@stripe/stripe-js'
+import { getEnvironmentConfig } from './env-manager'
 
-// 服务端Stripe实例
-const stripeSecretKey = process.env.STRIPE_SECRET_KEY
-if (!stripeSecretKey) {
-  throw new Error('STRIPE_SECRET_KEY environment variable is required')
+// 获取环境配置
+const config = getEnvironmentConfig()
+
+// 服务端Stripe实例 - 延迟初始化以避免启动时错误
+let stripeInstance: Stripe | null = null;
+
+function getStripeInstance(): Stripe {
+  if (!stripeInstance) {
+    const secretKey = config.payment.secretKey;
+    if (!secretKey) {
+      throw new Error(`Stripe配置未找到。${config.environment}环境需要配置STRIPE_SECRET_KEY${config.environment === 'development' ? '_DEV' : '_PROD'}`);
+    }
+    
+    stripeInstance = new Stripe(secretKey, {
+      apiVersion: '2025-06-30.basil',
+      typescript: true
+    });
+  }
+  return stripeInstance;
 }
 
-export const stripe = new Stripe(stripeSecretKey, {
-  apiVersion: '2025-06-30.basil',
-  typescript: true
-})
+// 导出Stripe实例访问器
+export const stripe = new Proxy({} as Stripe, {
+  get(target, prop) {
+    const instance = getStripeInstance();
+    return instance[prop as keyof Stripe];
+  }
+});
 
 // 客户端Stripe实例
 export const getStripe = () => {
-  return loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '')
+  const publishableKey = config.payment.publishableKey
+  if (!publishableKey) {
+    console.error(`Stripe publishable key not configured for ${config.environment} environment`)
+    return null
+  }
+  return loadStripe(publishableKey)
+}
+
+// 清理环境变量中的换行符
+const cleanEnvVar = (value: string | undefined, fallback: string): string => {
+  return (value || fallback).trim().replace(/[\r\n]/g, '')
 }
 
 // Stripe价格ID配置
 export const STRIPE_PRICE_IDS = {
   standard: {
-    monthly: process.env.STRIPE_PRICE_STANDARD_MONTHLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYB',
-    yearly: process.env.STRIPE_PRICE_STANDARD_YEARLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYC'
+    monthly: cleanEnvVar(process.env.STRIPE_PRICE_STANDARD_MONTHLY, 'price_1OxPRJJKQCJGaOjQ8XGbwGYB'),
+    yearly: cleanEnvVar(process.env.STRIPE_PRICE_STANDARD_YEARLY, 'price_1OxPRJJKQCJGaOjQ8XGbwGYC')
   },
   pro: {
-    monthly: process.env.STRIPE_PRICE_PRO_MONTHLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYD',
-    yearly: process.env.STRIPE_PRICE_PRO_YEARLY || 'price_1OxPRJJKQCJGaOjQ8XGbwGYE'
+    monthly: cleanEnvVar(process.env.STRIPE_PRICE_PRO_MONTHLY, 'price_1OxPRJJKQCJGaOjQ8XGbwGYD'),
+    yearly: cleanEnvVar(process.env.STRIPE_PRICE_PRO_YEARLY, 'price_1OxPRJJKQCJGaOjQ8XGbwGYE')
   }
 }
 
@@ -117,5 +146,5 @@ export function constructEvent(
   signature: string,
   secret: string
 ) {
-  return stripe.webhooks.constructEvent(payload, signature, secret)
+  return getStripeInstance().webhooks.constructEvent(payload, signature, secret)
 }

@@ -66,7 +66,14 @@
     "ai:memory:help": "node scripts/update-ai-memory.js 帮助",
     "git:security": "node scripts/git-security-fix.js",
     "git:security:fix": "node scripts/git-security-fix.js",
-    "git:security:check": "node scripts/smart-env.js 状态"
+    "git:security:check": "node scripts/smart-env.js 状态",
+    "env:protect:init": "node scripts/protect-env.js init",
+    "env:protect:verify": "node scripts/protect-env.js verify",
+    "env:protect:backup": "node scripts/protect-env.js backup",
+    "env:protect:restore": "node scripts/protect-env.js restore",
+    "env:protect:save": "node scripts/protect-env.js save",
+    "env:verify": "node scripts/verify-environment.js",
+    "env:check": "node scripts/verify-environment.js"
   },
   "dependencies": {
     "@fal-ai/serverless-client": "^0.15.0",

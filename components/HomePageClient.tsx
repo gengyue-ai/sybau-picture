@@ -131,7 +131,40 @@ const staticTexts = {
     'generator.textToImageMode': 'Text to Image',
     'generator.imageToImageMode': 'Image to Image',
     'generator.textPromptLabel': 'Text Prompt',
-    'generator.textPromptPlaceholder': 'Describe what you want to create...'
+    'generator.textPromptPlaceholder': 'Describe what you want to create...',
+    'generator.title': '🎨 AI Creative Workspace',
+    'generator.description': 'Choose your creation method, set the style, and let AI create beautiful works for you',
+    // 新增的翻译文本
+    'generator.creationPreparation': '🎨 Creation Setup',
+    'generator.creationPreparationDesc': 'Choose your creation method, set the style, and start your AI creative journey',
+    'generator.creationMode': 'Creation Mode',
+    'generator.textCreation': 'Text Creation',
+    'generator.imageCreation': 'Image Creation',
+    'generator.sybaustyle': 'Sybau Style',
+    'generator.textDescription': 'Text Description',
+    'generator.imageUpload': 'Image Upload',
+    'generator.detailedDescription': 'Describe the image you want to create, including style, colors, mood and details...',
+    'generator.detailedDescriptionHelp': 'Detailed descriptions help AI generate better creations',
+    'generator.loading': 'Loading...',
+    // 右侧结果展示区域翻译文本
+    'generator.creationResult': 'Creation Result',
+    'generator.creationResultDesc': 'Your AI creation will be beautifully presented here',
+    'generator.aiCreating': 'AI is creating...',
+    'generator.pleaseWait': 'Please wait, estimated 15-30 seconds',
+    'generator.downloadImage': 'Download Image',
+    'generator.recreate': 'Recreate',
+    'generator.creationComplete': 'Creation complete! You can download the image or recreate',
+    'generator.readyToCreate': 'Ready to Create',
+    'generator.readyToCreateDesc': 'After completing settings on the left, AI will generate beautiful works for you',
+    'generator.waitingForCommand': 'Waiting for your creative command...',
+    // 上传区域翻译文本
+    'generator.dragImageHere': 'Drag image here',
+    'generator.orClickToSelect': 'or click to select file',
+    'generator.supportFormats': 'Support JPG, PNG, WebP • Max 5MB',
+    'generator.optionalStyleChange': 'Optional: Describe desired style change...',
+    'generator.loginToStart': 'Login to Start Creating',
+    'generator.startAiCreation': 'Start AI Creation',
+    'generator.aiCreatingNow': 'AI is creating now...'
   },
   zh: {
     'home.hero.title': '创建病毒式',
@@ -255,7 +288,40 @@ const staticTexts = {
     'generator.textToImageMode': '文本到图片',
     'generator.imageToImageMode': '图片到图片',
     'generator.textPromptLabel': '文本提示',
-    'generator.textPromptPlaceholder': '描述您想要创建的内容...'
+    'generator.textPromptPlaceholder': '描述您想要创建的内容...',
+    'generator.title': '🎨 AI创作工作台',
+    'generator.description': '选择创作方式，设置风格，让AI为您创造精美作品',
+    // 新增的翻译文本
+    'generator.creationPreparation': '🎨 创作准备',
+    'generator.creationPreparationDesc': '选择创作方式，设置风格，开始您的AI创作之旅',
+    'generator.creationMode': '创作模式',
+    'generator.textCreation': '文字创作',
+    'generator.imageCreation': '图片创作',
+    'generator.sybaustyle': 'Sybau 风格',
+    'generator.textDescription': '文字描述',
+    'generator.imageUpload': '图片上传',
+    'generator.detailedDescription': '详细描述您想要创作的图片，包含风格、颜色、情绪和细节...',
+    'generator.detailedDescriptionHelp': '详细的描述能帮助AI生成更好的作品',
+    'generator.loading': '加载中...',
+    // 右侧结果展示区域翻译文本
+    'generator.creationResult': '创作结果',
+    'generator.creationResultDesc': '您的AI创作将在这里精彩呈现',
+    'generator.aiCreating': 'AI正在创作中...',
+    'generator.pleaseWait': '请稍候，预计需要15-30秒',
+    'generator.downloadImage': '下载图片',
+    'generator.recreate': '重新创作',
+    'generator.creationComplete': '创作完成！您可以下载图片或重新创作',
+    'generator.readyToCreate': '准备创作',
+    'generator.readyToCreateDesc': '在左侧完成设置后，AI将为您生成精美作品',
+    'generator.waitingForCommand': '等待您的创作指令...',
+    // 上传区域翻译文本
+    'generator.dragImageHere': '拖拽图片到这里',
+    'generator.orClickToSelect': '或点击选择文件',
+    'generator.supportFormats': '支持 JPG, PNG, WebP • 最大 5MB',
+    'generator.optionalStyleChange': '可选：描述想要的风格变化...',
+    'generator.loginToStart': '立即登录开始创作',
+    'generator.startAiCreation': '开始AI创作',
+    'generator.aiCreatingNow': 'AI正在创作中...'
   }
 }
 
@@ -271,15 +337,15 @@ export default function HomePageClient() {
       // 免费版直接开始使用
       return
     } else {
-      // 付费版跳转到对应语言的登录页面
-      const loginPath = currentLang === 'zh' ? '/zh/auth/signin' : '/auth/signin'
-      router.push(loginPath)
+      // 付费版跳转到对应语言的定价页面，让定价页面处理登录状态检查和支付流程
+      const pricingPath = currentLang === 'zh' ? '/zh/pricing' : '/pricing'
+      router.push(pricingPath)
     }
   }
 
   const getCurrentLanguage = () => {
     const segments = pathname.split('/').filter(Boolean)
-    const supportedLanguages = ['zh']
+    const supportedLanguages = ['en', 'zh']  // 支持英文和中文
 
     if (segments.length === 0) return 'en'
     if (supportedLanguages.includes(segments[0])) return segments[0]
@@ -324,7 +390,7 @@ export default function HomePageClient() {
             <div className="flex flex-wrap justify-center gap-4 mb-8">
               {[
                 { icon: <Star className="w-5 h-5" />, text: getText('home.benefits.free', '100% Free') },
-                { icon: <Rocket className="w-5 h-5" />, text: getText('home.benefits.noRegistration', 'Google登录') },
+                { icon: <Rocket className="w-5 h-5" />, text: getText('home.benefits.noRegistration', 'Google Login') },
                 { icon: <Heart className="w-5 h-5" />, text: getText('home.benefits.hdQuality', 'HD Quality') },
                 { icon: <TrendingUp className="w-5 h-5" />, text: getText('home.benefits.fastProcessing', '8s Processing') }
               ].map((benefit, index) => (
@@ -365,10 +431,10 @@ export default function HomePageClient() {
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-4xl lg:text-5xl font-bold mb-6 text-gray-800">
-              🎨 AI创作工作台
+              {getText('generator.title', '🎨 AI Creative Workspace')}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              选择创作方式，设置风格，让AI为您创造精美作品
+              {getText('generator.description', 'Choose your creation method, set the style, and let AI create beautiful works for you')}
             </p>
           </div>
 
@@ -407,7 +473,38 @@ export default function HomePageClient() {
                 textToImageMode: getText('generator.textToImageMode', 'Text to Image'),
                 imageToImageMode: getText('generator.imageToImageMode', 'Image to Image'),
                 textPromptLabel: getText('generator.textPromptLabel', 'Text Prompt'),
-                textPromptPlaceholder: getText('generator.textPromptPlaceholder', 'Describe what you want to create...')
+                textPromptPlaceholder: getText('generator.textPromptPlaceholder', 'Describe what you want to create...'),
+                // 新增的翻译文本
+                creationPreparation: getText('generator.creationPreparation', '🎨 Creation Setup'),
+                creationPreparationDesc: getText('generator.creationPreparationDesc', 'Choose your creation method, set the style, and start your AI creative journey'),
+                creationMode: getText('generator.creationMode', 'Creation Mode'),
+                textCreation: getText('generator.textCreation', 'Text Creation'),
+                imageCreation: getText('generator.imageCreation', 'Image Creation'),
+                sybaustyle: getText('generator.sybaustyle', 'Sybau Style'),
+                textDescription: getText('generator.textDescription', 'Text Description'),
+                imageUpload: getText('generator.imageUpload', 'Image Upload'),
+                detailedDescription: getText('generator.detailedDescription', 'Describe the image you want to create, including style, colors, mood and details...'),
+                detailedDescriptionHelp: getText('generator.detailedDescriptionHelp', 'Detailed descriptions help AI generate better creations'),
+                loading: getText('generator.loading', 'Loading...'),
+                // 右侧结果展示区域翻译文本
+                creationResult: getText('generator.creationResult', 'Creation Result'),
+                creationResultDesc: getText('generator.creationResultDesc', 'Your AI creation will be beautifully presented here'),
+                aiCreating: getText('generator.aiCreating', 'AI is creating...'),
+                pleaseWait: getText('generator.pleaseWait', 'Please wait, estimated 15-30 seconds'),
+                downloadImage: getText('generator.downloadImage', 'Download Image'),
+                recreate: getText('generator.recreate', 'Recreate'),
+                creationComplete: getText('generator.creationComplete', 'Creation complete! You can download the image or recreate'),
+                readyToCreate: getText('generator.readyToCreate', 'Ready to Create'),
+                readyToCreateDesc: getText('generator.readyToCreateDesc', 'After completing settings on the left, AI will generate beautiful works for you'),
+                waitingForCommand: getText('generator.waitingForCommand', 'Waiting for your creative command...'),
+                // 上传区域翻译文本
+                dragImageHere: getText('generator.dragImageHere', 'Drag image here'),
+                orClickToSelect: getText('generator.orClickToSelect', 'or click to select file'),
+                supportFormats: getText('generator.supportFormats', 'Support JPG, PNG, WebP • Max 5MB'),
+                optionalStyleChange: getText('generator.optionalStyleChange', 'Optional: Describe desired style change...'),
+                loginToStart: getText('generator.loginToStart', 'Login to Start Creating'),
+                startAiCreation: getText('generator.startAiCreation', 'Start AI Creation'),
+                aiCreatingNow: getText('generator.aiCreatingNow', 'AI is creating now...')
               }}
             />
           </div>

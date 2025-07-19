@@ -29,13 +29,17 @@ export function middleware(request: NextRequest) {
 
   const currentLocale = getCurrentLocale(pathname)
 
-  // 如果URL已经包含语言代码，直接继续
+  // 如果URL已经包含语言代码，设置正确的locale header
   if (currentLocale) {
-    return NextResponse.next()
+    const response = NextResponse.next()
+    response.headers.set('x-locale', currentLocale)
+    return response
   }
 
-  // 对于没有语言前缀的路径，默认显示英文版本
-  return NextResponse.next()
+  // 对于没有语言前缀的路径，强制设置英文locale，不进行任何重定向
+  const response = NextResponse.next()
+  response.headers.set('x-locale', defaultLocale)
+  return response
 }
 
 export const config = {

@@ -308,7 +308,7 @@ function getEnvironmentConfig() {
 
   return {
     environment: current.environment,
-    baseUrl: env.NEXTAUTH_URL || (current.environment === 'production' ? 'https://sybaupicture.com' : 'http://localhost:3001'),
+    baseUrl: (env.NEXTAUTH_URL || (current.environment === 'production' ? 'https://sybaupicture.com' : 'http://localhost:3001')).trim().replace(/[\r\n]/g, ''),
     debug: env.DEBUG === 'true' || current.environment === 'development',
     database: {
       url: env.DATABASE_URL || ''

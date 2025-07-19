@@ -6,6 +6,7 @@ export type EnvironmentType = 'development' | 'production';
 export interface EnvironmentConfig {
   environment: EnvironmentType;
   baseUrl: string;
+  isDevelopment: boolean;
   database: DatabaseConfig;
   auth: AuthConfig;
   ai: AIConfig;
@@ -64,50 +65,82 @@ export function detectEnvironment(): EnvironmentType {
 }
 
 /**
- * 获取环境配置
+ * 获取环境配置 - 智能环境变量管理
  */
 export function getEnvironmentConfig(): EnvironmentConfig {
   const environment = detectEnvironment();
 
+  // 清理环境变量函数
+  const cleanEnv = (value: string | undefined): string => {
+    return value ? value.trim().replace(/[\r\n\t]/g, '') : '';
+  };
+
+  // 智能获取环境变量 - 优先级：通用名称 > 环境特定名称 > 后备值
+  const getEnvVar = (genericName: string, prodSuffix?: string, devSuffix?: string, fallback: string = ''): string => {
+    // 1. 优先使用通用名称（适用于所有环境）
+    const generic = cleanEnv(process.env[genericName]);
+    if (generic) return generic;
+
+    // 2. 根据环境使用特定名称
+    if (environment === 'production' && prodSuffix) {
+      const prodValue = cleanEnv(process.env[prodSuffix]);
+      if (prodValue) return prodValue;
+    } else if (environment === 'development' && devSuffix) {
+      const devValue = cleanEnv(process.env[devSuffix]);
+      if (devValue) return devValue;
+    }
+
+    // 3. 使用后备值
+    return fallback;
+  };
+
+  // 获取基础URL - 更智能的逻辑
+  const getBaseUrl = (): string => {
+    if (environment === 'production') {
+      return cleanEnv(process.env.NEXTAUTH_URL) || 
+             cleanEnv(process.env.NEXT_PUBLIC_BASE_URL) || 
+             'https://sybaupicture.com';
+    } else {
+      // 开发环境：支持端口动态检测
+      const devUrl = cleanEnv(process.env.NEXTAUTH_URL) || 
+                     cleanEnv(process.env.NEXT_PUBLIC_BASE_URL);
+      
+      if (devUrl) return devUrl;
+      
+      // 默认开发端口（可以通过环境变量覆盖）
+      const port = process.env.PORT || '3001';
+      return `http://localhost:${port}`;
+    }
+  };
+
   return {
     environment,
-    baseUrl: environment === 'production'
-      ? process.env.NEXTAUTH_URL || 'https://sybaupicture.com'
-      : 'http://localhost:3001',
+    baseUrl: getBaseUrl(),
+    isDevelopment: environment === 'development',
     database: {
-      url: process.env.DATABASE_URL || '',
+      url: cleanEnv(process.env.DATABASE_URL) || cleanEnv(process.env.POSTGRES_PRISMA_URL) || '',
       type: environment === 'production' ? 'supabase' : 'local'
     },
     auth: {
       provider: 'google',
-      clientId: environment === 'production'
-        ? process.env.GOOGLE_CLIENT_ID_PROD || ''
-        : process.env.GOOGLE_CLIENT_ID_DEV || '',
-      clientSecret: environment === 'production'
-        ? process.env.GOOGLE_CLIENT_SECRET_PROD || ''
-        : process.env.GOOGLE_CLIENT_SECRET_DEV || '',
-      secret: process.env.NEXTAUTH_SECRET || ''
+      clientId: getEnvVar('GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_ID_PROD', 'GOOGLE_CLIENT_ID_DEV'),
+      clientSecret: getEnvVar('GOOGLE_CLIENT_SECRET', 'GOOGLE_CLIENT_SECRET_PROD', 'GOOGLE_CLIENT_SECRET_DEV'),
+      secret: getEnvVar('NEXTAUTH_SECRET', undefined, undefined, 'fallback-secret-for-dev')
     },
     ai: {
       provider: 'fal',
-      apiKey: process.env.FAL_KEY || ''
+      apiKey: getEnvVar('FAL_KEY')
     },
     payment: {
       provider: 'stripe',
-      secretKey: environment === 'production'
-        ? process.env.STRIPE_SECRET_KEY_PROD || ''
-        : process.env.STRIPE_SECRET_KEY_DEV || '',
-      publishableKey: environment === 'production'
-        ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_PROD || ''
-        : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_DEV || '',
-      webhookSecret: environment === 'production'
-        ? process.env.STRIPE_WEBHOOK_SECRET_PROD || ''
-        : process.env.STRIPE_WEBHOOK_SECRET_DEV || ''
+      secretKey: getEnvVar('STRIPE_SECRET_KEY', 'STRIPE_SECRET_KEY_PROD', 'STRIPE_SECRET_KEY_DEV'),
+      publishableKey: getEnvVar('NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_PROD', 'NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_DEV'),
+      webhookSecret: getEnvVar('STRIPE_WEBHOOK_SECRET', 'STRIPE_WEBHOOK_SECRET_PROD', 'STRIPE_WEBHOOK_SECRET_DEV')
     },
     email: {
       provider: 'resend',
-      apiKey: process.env.RESEND_API_KEY || '',
-      fromEmail: process.env.FROM_EMAIL_ADDRESS || 'noreply@sybaupicture.com'
+      apiKey: getEnvVar('RESEND_API_KEY'),
+      fromEmail: getEnvVar('FROM_EMAIL_ADDRESS', undefined, undefined, 'noreply@sybaupicture.com')
     },
     debug: environment === 'development'
   };
@@ -166,9 +199,9 @@ export function validateConfiguration(config: EnvironmentConfig): {
   if (!config.auth.clientId || !config.auth.clientSecret) {
     issues.push('缺少Google OAuth配置');
     if (config.environment === 'production') {
-      suggestions.push('请配置GOOGLE_CLIENT_ID_PROD和GOOGLE_CLIENT_SECRET_PROD');
+      suggestions.push('请配置GOOGLE_CLIENT_ID和GOOGLE_CLIENT_SECRET环境变量');
     } else {
-      suggestions.push('请配置GOOGLE_CLIENT_ID_DEV和GOOGLE_CLIENT_SECRET_DEV');
+      suggestions.push('请配置GOOGLE_CLIENT_ID_DEV和GOOGLE_CLIENT_SECRET_DEV环境变量');
     }
   }
 
@@ -187,9 +220,18 @@ export function validateConfiguration(config: EnvironmentConfig): {
   if (!config.payment.secretKey || !config.payment.publishableKey) {
     issues.push('缺少Stripe支付配置');
     if (config.environment === 'production') {
-      suggestions.push('请配置STRIPE_SECRET_KEY_PROD和相关生产环境密钥');
+      suggestions.push('请配置STRIPE_SECRET_KEY_PROD和NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_PROD环境变量');
     } else {
-      suggestions.push('请配置STRIPE_SECRET_KEY_DEV和相关开发环境密钥');
+      suggestions.push('请配置STRIPE_SECRET_KEY_DEV和NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_DEV环境变量');
+    }
+  }
+
+  if (!config.payment.webhookSecret) {
+    issues.push('缺少Stripe Webhook配置');
+    if (config.environment === 'production') {
+      suggestions.push('请配置STRIPE_WEBHOOK_SECRET_PROD环境变量');
+    } else {
+      suggestions.push('请配置STRIPE_WEBHOOK_SECRET_DEV环境变量');
     }
   }
 

@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Check, X, Star, Sparkles, Zap, Crown, Shield, Users, Rocket } from 'lucide-react'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSession } from 'next-auth/react'
+import { useToast } from '@/hooks/use-toast'
 
 const getPricingPlans = (isAnnual: boolean) => [
   {
@@ -106,16 +108,84 @@ const faqs = [
 
 export default function ZHPricingPage() {
   const [isAnnual, setIsAnnual] = useState(false)
+  const [loadingPlan, setLoadingPlan] = useState<string | null>(null)
   const pricingPlans = getPricingPlans(isAnnual)
   const router = useRouter()
+  const { data: session, status } = useSession()
+  const { toast } = useToast()
 
-  const handlePlanClick = (planId: string) => {
+  const handlePlanClick = async (planId: string) => {
     if (planId === 'free') {
       // 免费版直接跳转到中文主页使用生成器
       router.push('/zh')
-    } else {
-      // 付费版跳转到中文登录页面
+      return
+    }
+
+    // 检查用户登录状态
+    console.log('=== 中文版支付按钮点击 ===')
+    console.log('Session状态:', {
+      status,
+      hasSession: !!session,
+      userEmail: session?.user?.email,
+      sessionData: session
+    })
+
+    if (status === 'loading') {
+      console.log('Session正在加载，请等待...')
+      return
+    }
+
+    if (status === 'unauthenticated' || !session?.user?.email) {
+      console.log('用户未登录，跳转到登录页面')
+      // 未登录用户跳转到中文登录页面
       router.push('/zh/auth/signin?callbackUrl=/zh/pricing')
+      return
+    }
+
+    // 用户已登录，开始支付流程
+    console.log('用户已登录，开始支付流程:', session.user.email)
+    setLoadingPlan(planId)
+
+    try {
+      const response = await fetch('/api/payment/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planType: planId,
+          billingCycle: isAnnual ? 'yearly' : 'monthly'
+        }),
+      })
+
+      const data = await response.json()
+      console.log('支付API响应:', { status: response.status, data })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          console.log('支付API返回401，可能session过期，跳转登录')
+          router.push('/zh/auth/signin?callbackUrl=/zh/pricing')
+          return
+        }
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+
+      if (data.url) {
+        console.log('重定向到Stripe支付页面:', data.url)
+        // 重定向到Stripe结算页面
+        window.location.href = data.url
+      } else {
+        throw new Error('No checkout URL received')
+      }
+    } catch (error) {
+      console.error('Payment error:', error)
+      toast({
+        title: "支付失败",
+        description: error instanceof Error ? error.message : "创建支付会话失败，请稍后再试",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingPlan(null)
     }
   }
 
@@ -208,8 +278,9 @@ export default function ZHPricingPage() {
                     variant={plan.buttonVariant}
                     size="lg"
                     onClick={() => handlePlanClick(plan.id)}
+                    disabled={loadingPlan === plan.id}
                   >
-                    {plan.buttonText}
+                    {loadingPlan === plan.id ? '处理中...' : plan.buttonText}
                   </Button>
 
                   <div className="space-y-4">

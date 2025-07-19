@@ -46,6 +46,37 @@ interface ImageGeneratorProps {
     imageToImageMode?: string
     textPromptLabel?: string
     textPromptPlaceholder?: string
+    // 新增的翻译文本
+    creationPreparation?: string
+    creationPreparationDesc?: string
+    creationMode?: string
+    textCreation?: string
+    imageCreation?: string
+    sybaustyle?: string
+    textDescription?: string
+    imageUpload?: string
+    detailedDescription?: string
+    detailedDescriptionHelp?: string
+    loading?: string
+    // 右侧结果展示区域翻译文本
+    creationResult?: string
+    creationResultDesc?: string
+    aiCreating?: string
+    pleaseWait?: string
+    downloadImage?: string
+    recreate?: string
+    creationComplete?: string
+    readyToCreate?: string
+    readyToCreateDesc?: string
+    waitingForCommand?: string
+    // 上传区域翻译文本
+    dragImageHere?: string
+    orClickToSelect?: string
+    supportFormats?: string
+    optionalStyleChange?: string
+    loginToStart?: string
+    startAiCreation?: string
+    aiCreatingNow?: string
   }
 }
 
@@ -329,7 +360,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
           <CardContent className="p-8">
             <div className="flex items-center justify-center space-x-3">
               <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
-              <span className="text-lg text-gray-600">加载中...</span>
+              <span className="text-lg text-gray-600">{texts.loading || 'Loading...'}</span>
             </div>
           </CardContent>
         </Card>
@@ -348,10 +379,10 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
             </div>
           </div>
           <CardTitle className="text-lg font-bold bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">
-            🎨 创作准备
+            {texts.creationPreparation || '🎨 Creation Setup'}
           </CardTitle>
           <CardDescription className="text-xs text-gray-600">
-            选择创作方式，设置风格，开始您的AI创作之旅
+            {texts.creationPreparationDesc || 'Choose your creation method, set the style, and start your AI creative journey'}
           </CardDescription>
         </CardHeader>
 
@@ -360,7 +391,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider flex items-center">
               <Type className="w-3 h-3 mr-1" />
-              创作模式
+              {texts.creationMode || 'Creation Mode'}
             </Label>
             <div className="grid grid-cols-2 gap-2">
               <Button
@@ -374,7 +405,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
               >
                 <div className="flex items-center space-x-2">
                   <Type className="w-3 h-3" />
-                  <span className="text-xs font-medium">文字创作</span>
+                  <span className="text-xs font-medium">{texts.textCreation || 'Text Creation'}</span>
                 </div>
               </Button>
               <Button
@@ -388,7 +419,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
               >
                 <div className="flex items-center space-x-2">
                   <ImageIcon className="w-3 h-3" />
-                  <span className="text-xs font-medium">图片创作</span>
+                  <span className="text-xs font-medium">{texts.imageCreation || 'Image Creation'}</span>
                 </div>
               </Button>
             </div>
@@ -399,7 +430,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider flex items-center">
                 <Crown className="w-3 h-3 mr-1" />
-                Sybau 风格
+                {texts.sybaustyle || 'Sybau Style'}
               </Label>
               {userPlan && (
                 <Badge variant="outline" className="text-xs px-1.5 py-0.5 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 border-purple-200">
@@ -461,14 +492,14 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
           <div className="space-y-2">
             <Label className="text-xs font-semibold text-gray-700 uppercase tracking-wider flex items-center">
               <Upload className="w-3 h-3 mr-1" />
-              {generationMode === 'text-to-image' ? '文字描述' : '图片上传'}
+              {generationMode === 'text-to-image' ? (texts.textDescription || 'Text Description') : (texts.imageUpload || 'Image Upload')}
             </Label>
 
             {generationMode === 'text-to-image' ? (
               <div className="space-y-1">
                 <Textarea
                   id="textPrompt"
-                  placeholder="详细描述您想要创作的图片，包含风格、颜色、情绪和细节..."
+                  placeholder={texts.detailedDescription || "Describe the image you want to create, including style, colors, mood and details..."}
                   value={textPrompt}
                   onChange={(e) => setTextPrompt(e.target.value)}
                   className="w-full min-h-[60px] resize-none border-purple-200 rounded-lg focus:border-purple-400 focus:ring-purple-400 text-sm"
@@ -476,7 +507,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 />
                 <p className="text-xs text-gray-500 flex items-center">
                   <Sparkles className="w-3 h-3 mr-1" />
-                  详细的描述能帮助AI生成更好的作品
+                  {texts.detailedDescriptionHelp || 'Detailed descriptions help AI generate better creations'}
                 </p>
               </div>
             ) : (
@@ -530,11 +561,11 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                       <Upload className="h-8 w-8 text-purple-400 mx-auto group-hover:scale-110 transition-transform" />
                     </div>
                     <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-700">拖拽图片到这里</p>
-                      <p className="text-xs text-gray-500">或点击选择文件</p>
+                      <p className="text-sm font-medium text-gray-700">{texts.dragImageHere}</p>
+                      <p className="text-xs text-gray-500">{texts.orClickToSelect}</p>
                       <p className="text-xs text-gray-400 flex items-center justify-center">
                         <ImageIcon className="w-3 h-3 mr-1" />
-                        支持 JPG, PNG, WebP • 最大 5MB
+                        {texts.supportFormats}
                       </p>
                     </div>
                   </div>
@@ -548,7 +579,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 <Input
                   id="prompt"
                   type="text"
-                  placeholder="可选：描述想要的风格变化..."
+                  placeholder={texts.optionalStyleChange}
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
                   className="w-full border-purple-200 rounded-lg focus:border-purple-400 text-sm h-8"
@@ -576,7 +607,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 <Button className="w-full h-10 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 text-sm">
                   <div className="flex items-center space-x-2">
                     <LogIn className="w-4 h-4" />
-                    <span>🚀 立即登录开始创作</span>
+                    <span>🚀 {texts.loginToStart}</span>
                   </div>
                 </Button>
               </Link>
@@ -593,12 +624,12 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 {isGenerating ? (
                   <div className="flex items-center space-x-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>AI正在创作中...</span>
+                    <span>{texts.aiCreatingNow}</span>
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-4 h-4" />
-                    <span>🚀 开始AI创作</span>
+                    <span>🚀 {texts.startAiCreation}</span>
                   </div>
                 )}
               </Button>
@@ -616,10 +647,10 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
             </div>
           </div>
           <CardTitle className="text-xl font-bold bg-gradient-to-r from-pink-700 to-purple-600 bg-clip-text text-transparent">
-            ✨ 创作结果
+            ✨ {texts.creationResult}
           </CardTitle>
           <CardDescription className="text-sm text-gray-600">
-            您的AI创作将在这里精彩呈现
+            {texts.creationResultDesc}
           </CardDescription>
         </CardHeader>
 
@@ -633,8 +664,8 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 </div>
               </div>
               <div className="text-center space-y-2">
-                <p className="text-xl font-semibold text-gray-700">AI正在创作中...</p>
-                <p className="text-sm text-gray-500">请稍候，预计需要15-30秒</p>
+                <p className="text-xl font-semibold text-gray-700">{texts.aiCreating}</p>
+                <p className="text-sm text-gray-500">{texts.pleaseWait}</p>
                 <div className="w-48 bg-purple-100 rounded-full h-2 mx-auto">
                   <div className="bg-gradient-to-r from-purple-600 to-pink-600 h-2 rounded-full animate-pulse" style={{width: '60%'}}></div>
                 </div>
@@ -656,7 +687,7 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                   className="flex-1 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 h-11"
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  下载图片
+                  {texts.downloadImage}
                 </Button>
                 <Button
                   onClick={resetGenerator}
@@ -664,11 +695,11 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                   className="flex-1 border-purple-300 text-purple-700 hover:bg-purple-50 rounded-xl h-11"
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  重新创作
+                  {texts.recreate}
                 </Button>
               </div>
               <div className="text-center pt-2">
-                <p className="text-xs text-gray-500">🎉 创作完成！您可以下载图片或重新创作</p>
+                <p className="text-xs text-gray-500">🎉 {texts.creationComplete}</p>
               </div>
             </div>
           ) : (
@@ -682,13 +713,13 @@ export default function ImageGenerator({ texts }: ImageGeneratorProps) {
                 </div>
               </div>
               <div className="text-center space-y-2">
-                <p className="text-xl font-semibold text-gray-700">准备创作</p>
-                <p className="text-sm text-gray-500">在左侧完成设置后，AI将为您生成精美作品</p>
+                <p className="text-xl font-semibold text-gray-700">{texts.readyToCreate}</p>
+                <p className="text-sm text-gray-500">{texts.readyToCreateDesc}</p>
               </div>
               <div className="w-full max-w-xs">
                 <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-full p-1">
                   <div className="bg-white rounded-full py-2 px-4 text-center">
-                    <span className="text-sm font-medium text-gray-600">等待您的创作指令...</span>
+                    <span className="text-sm font-medium text-gray-600">{texts.waitingForCommand}</span>
                   </div>
                 </div>
               </div>

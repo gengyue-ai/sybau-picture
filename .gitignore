@@ -72,6 +72,8 @@ temp/
 # Protection system
 protection/backups/
 protection/logs/
+.env-backups/
+.env.checksums.json
 
 # Scripts that auto-delete
 scripts/fix-*.js
